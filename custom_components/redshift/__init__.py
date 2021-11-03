@@ -39,9 +39,6 @@ async def async_setup(hass, config):
         await hass.services.async_call('light', SERVICE_TURN_ON, attrs)
 
     async def timer_event(event):
-        if inactive():
-            return
-
         nonlocal known_states
 
         await hass.async_block_till_done()
@@ -50,6 +47,9 @@ async def async_setup(hass, config):
         known_states = dict(
             filter(lambda x: x[0] in new_states.keys(), known_states.items())
         )
+
+        if inactive():
+            return
 
         for lgt, new_state in new_states.items():
             known_state = known_states.get(lgt)

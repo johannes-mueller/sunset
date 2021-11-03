@@ -184,6 +184,88 @@ async def test_service_active_inactive(
     assert len(turn_on_service) == 1
 
 
+async def test_light_goes_on_while_inactive(
+        hass,
+        lights,
+        turn_on_service,
+        start_at_noon,
+        some_day_time
+):
+    assert await async_setup(hass, {DOMAIN: {}})
+
+    await turn_on_lights(hass, ['light_1'])
+
+    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 1
+
+    turn_on_service.pop()
+
+    hass.states.async_set('redshift.active', False)
+
+    hass.states.async_set('light.light_1', STATE_OFF)
+
+    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 0
+
+    hass.states.async_set('light.light_1', STATE_ON, attributes={ATTR_COLOR_TEMP: 6200})
+
+    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 0
+
+    hass.states.async_set('redshift.active', True)
+
+    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 1
+
+
+async def test_override_while_active_then_reactive(
+        hass,
+        lights,
+        turn_on_service,
+        start_at_noon,
+        some_day_time
+):
+    assert await async_setup(hass, {DOMAIN: {}})
+
+    await turn_on_lights(hass, ['light_1'])
+
+    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 1
+
+    turn_on_service.pop()
+
+    hass.states.async_set('light.light_1', STATE_ON, attributes={ATTR_COLOR_TEMP: 6200})
+
+    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 0
+
+    hass.states.async_set('redshift.active', False)
+
+    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 0
+
+    hass.states.async_set('redshift.active', True)
+
+    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 0
+
+
 async def test_service_turn_on_call_four_lights_four_on(
         hass,
         more_lights,
