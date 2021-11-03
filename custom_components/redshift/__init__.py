@@ -23,6 +23,9 @@ from .calculator import RedshiftCalculator
 
 async def async_setup(hass, config):
 
+    def inactive():
+        return hass.states.get(DOMAIN+'.active').state != 'True'
+
     def fetch_light_states():
         return {
             lgt: hass.states.get(lgt) for lgt in hass.states.async_entity_ids('light')
@@ -36,6 +39,9 @@ async def async_setup(hass, config):
         await hass.services.async_call('light', SERVICE_TURN_ON, attrs)
 
     async def timer_event(event):
+        if inactive():
+            return
+
         nonlocal known_states
 
         await hass.async_block_till_done()

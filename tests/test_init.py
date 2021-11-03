@@ -151,6 +151,39 @@ async def test_service_turn_on_call_two_lights_two_on(
     assert len(turn_on_service) == 2
 
 
+async def test_service_active_inactive(
+        hass,
+        lights,
+        turn_on_service,
+        start_at_noon,
+        some_day_time
+):
+    assert await async_setup(hass, {DOMAIN: {}})
+
+    await turn_on_lights(hass, ['light_1'])
+
+    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 1
+
+    turn_on_service.pop()
+
+    hass.states.async_set('redshift.active', False)
+
+    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 0
+
+    hass.states.async_set('redshift.active', True)
+
+    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 1
+
+
 async def test_service_turn_on_call_four_lights_four_on(
         hass,
         more_lights,
