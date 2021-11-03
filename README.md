@@ -1,3 +1,5 @@
+[![pytest](https://github.com/johannes-mueller/redshift/actions/workflows/pytest.yml/badge.svg)](https://github.com/johannes-mueller/redshift/actions/workflows/pytest.yml)
+
 # Redshift
 
 Get yourself accustomed to the evening for better sleep.
