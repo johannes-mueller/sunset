@@ -1,3 +1,5 @@
+import logging
+
 import datetime as DT
 
 import homeassistant.core as HA
@@ -20,6 +22,7 @@ from homeassistant.components.light import (
 from .const import *
 from .calculator import RedshiftCalculator
 
+_LOGGER = logging.getLogger('redshift')
 
 async def async_setup(hass, config):
 
@@ -34,6 +37,7 @@ async def async_setup(hass, config):
 
     async def apply_new_color_temp(lgt):
         color_temp = round(redshift_calculator.color_temp())
+        _LOGGER.debug("%s -> %s", lgt, color_temp)
         attrs = {ATTR_ENTITY_ID: lgt, ATTR_COLOR_TEMP: color_temp}
         known_states[lgt] = HA.State(lgt, STATE_ON, attrs)
         await hass.services.async_call('light', SERVICE_TURN_ON, attrs)
@@ -59,6 +63,7 @@ async def async_setup(hass, config):
             light_just_went_on = known_state is None
             nobody_changed_color_temp_since_last_time = known_color_temp == new_color_temp
 
+            _LOGGER.debug("%s: %s %s" %(lgt, known_color_temp, new_color_temp))
             if nobody_changed_color_temp_since_last_time or light_just_went_on:
                 await apply_new_color_temp(lgt)
 
