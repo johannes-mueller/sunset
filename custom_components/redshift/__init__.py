@@ -24,6 +24,7 @@ from .calculator import RedshiftCalculator
 
 _LOGGER = logging.getLogger('redshift')
 
+
 async def async_setup(hass, config):
 
     def inactive():
@@ -36,7 +37,9 @@ async def async_setup(hass, config):
         }
 
     async def apply_new_color_temp(lgt):
-        color_temp = round(redshift_calculator.color_temp())
+        min_mired = hass.states.get(lgt).attributes['min_mireds']
+        max_mired = hass.states.get(lgt).attributes['max_mireds']
+        color_temp = min(max_mired, max(min_mired, round(redshift_calculator.color_temp())))
         _LOGGER.debug("%s -> %s", lgt, color_temp)
         attrs = {ATTR_ENTITY_ID: lgt, ATTR_COLOR_TEMP: color_temp}
         known_states[lgt] = HA.State(lgt, STATE_ON, attrs)
@@ -63,7 +66,7 @@ async def async_setup(hass, config):
             light_just_went_on = known_state is None
             nobody_changed_color_temp_since_last_time = known_color_temp == new_color_temp
 
-            _LOGGER.debug("%s: %s %s" %(lgt, known_color_temp, new_color_temp))
+            _LOGGER.debug("%s: %s %s" % (lgt, known_color_temp, new_color_temp))
             if nobody_changed_color_temp_since_last_time or light_just_went_on:
                 await apply_new_color_temp(lgt)
 

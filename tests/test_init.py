@@ -38,6 +38,13 @@ from pytest_homeassistant_custom_component.common import (
 
 from .const import MOCK_CONFIG
 
+MIN_MIRED = 160
+MAX_MIRED = 400
+MINMAX_MIREDS = {
+    'min_mireds': MIN_MIRED,
+    'max_mireds': MAX_MIRED
+}
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -49,7 +56,9 @@ async def test_setup(hass):
 
 async def turn_on_lights(hass, lights):
     attrs = {
-        ATTR_COLOR_TEMP: 580
+        ATTR_COLOR_TEMP: 380,
+        'min_mireds': MIN_MIRED,
+        'max_mireds': MAX_MIRED
     }
     for lgt in lights:
         hass.states.async_set('light.'+lgt, STATE_ON, attrs)
@@ -63,7 +72,7 @@ async def make_lights(hass, lights):
     ])
 
     for lgt in lights:
-        hass.states.async_set('light.'+lgt, STATE_OFF)
+        hass.states.async_set('light.'+lgt, STATE_OFF, attributes=MINMAX_MIREDS)
 
 
 @pytest.fixture
@@ -84,10 +93,14 @@ async def turn_on_service(hass):
     def mock_service_log(call):
         """Mock service call."""
         entity = call.data[ATTR_ENTITY_ID]
-        attrs = {
-            ATTR_COLOR_TEMP: round(call.data.get(ATTR_COLOR_TEMP))
-        }
 
+        color_temp = min(MAX_MIRED, max(MIN_MIRED, round(call.data.get(ATTR_COLOR_TEMP))))
+
+        attrs = {
+            ATTR_COLOR_TEMP: color_temp,
+            'min_mireds': MIN_MIRED,
+            'max_mireds': MAX_MIRED
+        }
         hass.states.async_set(entity, STATE_ON, attrs)
 
         calls.append(call)
@@ -204,14 +217,16 @@ async def test_light_goes_on_while_inactive(
 
     hass.states.async_set('redshift.active', False)
 
-    hass.states.async_set('light.light_1', STATE_OFF)
+    hass.states.async_set('light.light_1', STATE_OFF, attributes=MINMAX_MIREDS)
 
     async_fire_time_changed(hass, some_day_time, fire_all=True)
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 0
 
-    hass.states.async_set('light.light_1', STATE_ON, attributes={ATTR_COLOR_TEMP: 590})
+    attrs = {ATTR_COLOR_TEMP: 390}
+    attrs.update(MINMAX_MIREDS)
+    hass.states.async_set('light.light_1', STATE_ON, attrs)
 
     async_fire_time_changed(hass, some_day_time, fire_all=True)
     await hass.async_block_till_done()
@@ -244,7 +259,7 @@ async def test_override_while_active_then_reactive(
 
     turn_on_service.pop()
 
-    hass.states.async_set('light.light_1', STATE_ON, attributes={ATTR_COLOR_TEMP: 590})
+    hass.states.async_set('light.light_1', STATE_ON, attributes={ATTR_COLOR_TEMP: 390})
 
     async_fire_time_changed(hass, some_day_time, fire_all=True)
     await hass.async_block_till_done()
@@ -320,7 +335,7 @@ async def test_service_turn_on_call_four_lights_3_manually_set_color_temp(
     turn_on_service.pop()
     turn_on_service.pop()
 
-    hass.states.async_set('light.light_3', STATE_ON, attributes={ATTR_COLOR_TEMP: 590})
+    hass.states.async_set('light.light_3', STATE_ON, attributes={ATTR_COLOR_TEMP: 390})
     async_fire_time_changed(hass, some_day_time, fire_all=True)
     await hass.async_block_till_done()
 
@@ -330,7 +345,7 @@ async def test_service_turn_on_call_four_lights_3_manually_set_color_temp(
 
     turn_on_service.pop()
 
-    hass.states.async_set('light.light_3', STATE_OFF)
+    hass.states.async_set('light.light_3', STATE_OFF, attributes=MINMAX_MIREDS)
     async_fire_time_changed(hass, some_day_time, fire_all=True)
     await hass.async_block_till_done()
 
@@ -396,7 +411,7 @@ async def test_redshift_day_to_night_non_default_night_color_temp(
         start_at_noon,
         some_night_time
 ):
-    config = dict(night_color_temp=2000)
+    config = dict(night_color_temp=2571)
     assert await async_setup(hass, {DOMAIN: config})
 
     await turn_on_lights(hass, ['light_1'])
@@ -406,7 +421,7 @@ async def test_redshift_day_to_night_non_default_night_color_temp(
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 1
-    assert turn_on_service[0].data[ATTR_COLOR_TEMP] == 500
+    assert turn_on_service[0].data[ATTR_COLOR_TEMP] == 389
 
 
 async def test_redshift_night_to_day_non_default_day_color_temp(
@@ -531,3 +546,45 @@ async def test_redshift_during_evening_rounding_error(
         assert len(turn_on_service) == 1
 
         turn_on_service.pop()
+
+
+async def test_redshift_day_to_night_exceed_mired(
+        hass,
+        lights,
+        turn_on_service,
+        start_at_noon,
+        some_night_time
+):
+    config = dict(night_color_temp=2000)
+    assert await async_setup(hass, {DOMAIN: config})
+
+    await turn_on_lights(hass, ['light_1'])
+
+    start_at_noon.move_to(some_night_time)
+    async_fire_time_changed(hass, some_night_time, fire_all=True)
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 1
+    assert turn_on_service[0].data[ATTR_COLOR_TEMP] == 400
+
+
+
+async def test_redshift_night_to_day_exceed_mired(
+        hass,
+        lights,
+        turn_on_service,
+        start_at_night,
+        some_day_time
+):
+    config = dict(day_color_temp=6500)
+    assert await async_setup(hass, {DOMAIN: config})
+
+    await turn_on_lights(hass, ['light_1'])
+
+    start_at_night.move_to(some_day_time)
+    async_fire_time_changed(hass, some_day_time, fire_all=True)
+
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 1
+    assert turn_on_service[0].data[ATTR_COLOR_TEMP] == 160
