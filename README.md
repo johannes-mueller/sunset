@@ -24,8 +24,8 @@ You can configure three times in your `configuration.yaml`.
 * `morning_time`: the time when the color temperature will get back to the
   day time level.
 
-* `day_color_temp`: the color temperature at daytime
-* `night_color_temp`: the color temperature at nighttime
+* `day_color_temp`: the color temperature at daytime in Kelvin
+* `night_color_temp`: the color temperature at nighttime in Kelvin
 
 
 ### Color temperature translation behavior
@@ -53,6 +53,10 @@ be again governed by the redshift.
 * Light dimming: automatically dim all the lights by a certain amount at a
   certain evening time to signal "now its time for bed".
 
+
+## Status
+
+Just hacked it. Deployed it today on my system. Let's see if it works. 😆
 
 
 ## Installation
