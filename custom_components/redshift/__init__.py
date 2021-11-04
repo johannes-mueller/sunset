@@ -33,7 +33,7 @@ async def async_setup(hass, config):
         }
 
     async def apply_new_color_temp(lgt):
-        color_temp = redshift_calculator.color_temp()
+        color_temp = round(redshift_calculator.color_temp())
         attrs = {ATTR_ENTITY_ID: lgt, ATTR_COLOR_TEMP: color_temp}
         known_states[lgt] = HA.State(lgt, STATE_ON, attrs)
         await hass.services.async_call('light', SERVICE_TURN_ON, attrs)

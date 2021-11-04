@@ -85,7 +85,7 @@ async def turn_on_service(hass):
         """Mock service call."""
         entity = call.data[ATTR_ENTITY_ID]
         attrs = {
-            ATTR_COLOR_TEMP: call.data.get(ATTR_COLOR_TEMP)
+            ATTR_COLOR_TEMP: round(call.data.get(ATTR_COLOR_TEMP))
         }
 
         hass.states.async_set(entity, STATE_ON, attrs)
@@ -503,3 +503,33 @@ async def test_redshift_night_to_day_non_default_morning_time(
 
         assert len(turn_on_service) == 1
         assert turn_on_service.pop().data[ATTR_COLOR_TEMP] == expected
+
+
+async def test_redshift_during_evening_rounding_error(
+        hass,
+        lights,
+        turn_on_service,
+        start_at_noon,
+        some_evening_time
+):
+    config = dict()
+    assert await async_setup(hass, {DOMAIN: config})
+
+    await turn_on_lights(hass, ['light_1'])
+
+    start_at_noon.move_to(some_evening_time)
+    async_fire_time_changed(hass, some_evening_time, fire_all=True)
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 1
+    assert turn_on_service.pop().data[ATTR_COLOR_TEMP] == 4500
+
+    for i in range(10):
+        start_at_noon.tick(10.0)
+        print(start_at_noon())
+        async_fire_time_changed(hass, start_at_noon(), fire_all=True)
+
+        await hass.async_block_till_done()
+        assert len(turn_on_service) == 1
+
+        turn_on_service.pop()
