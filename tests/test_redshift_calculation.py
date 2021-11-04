@@ -12,31 +12,31 @@ def test_setup_redshift_calculator():
         evening_time="17:00",
         night_time="23:00",
         morning_time="07:00",
-        day_color_temp=6300,
-        night_color_temp=2500
+        day_color_temp=200,
+        night_color_temp=600
     )
 
 
-@pytest.mark.parametrize('day_color_temp', [6300, 6400])
+@pytest.mark.parametrize('day_color_temp', [200, 180])
 def test_redshift_value_daytime(day_color_temp):
     calculator = RedshiftCalculator(
         evening_time="17:00",
         night_time="23:00",
         morning_time="07:00",
         day_color_temp=day_color_temp,
-        night_color_temp=2500
+        night_color_temp=600
     )
     with FG.freeze_time("2020-12-13 14:00:00"):
         assert calculator.color_temp() == day_color_temp
 
 
-@pytest.mark.parametrize('night_color_temp', [2500, 2700])
+@pytest.mark.parametrize('night_color_temp', [600, 210])
 def test_redshift_value_nighttime(night_color_temp):
     calculator = RedshiftCalculator(
         evening_time="17:00",
         night_time="23:00",
         morning_time="07:00",
-        day_color_temp=6300,
+        day_color_temp=200,
         night_color_temp=night_color_temp
     )
     with FG.freeze_time("2020-12-13 23:30:00"):
@@ -48,11 +48,11 @@ def test_redhift_value_nighttime_after_midnight():
         evening_time="17:00",
         night_time="23:00",
         morning_time="07:00",
-        day_color_temp=6300,
-        night_color_temp=2500
+        day_color_temp=200,
+        night_color_temp=600
     )
     with FG.freeze_time("2020-12-13 01:30:00"):
-        assert calculator.color_temp() == 2500
+        assert calculator.color_temp() == 600
 
 
 def test_redhift_value_nighttime_change_after_midnight():
@@ -60,27 +60,27 @@ def test_redhift_value_nighttime_change_after_midnight():
         evening_time="17:00",
         night_time="01:00",
         morning_time="07:00",
-        day_color_temp=6300,
-        night_color_temp=2500
+        day_color_temp=200,
+        night_color_temp=600
     )
     with FG.freeze_time("2020-12-13 01:30:00"):
-        assert calculator.color_temp() == 2500
+        assert calculator.color_temp() == 600
 
 
 @pytest.mark.parametrize('time, expected', [
-    ("20:00", 3500),
-    ("19:00", 4000),
-    ("21:00", 3000),
-    ("17:00", 5000),
-    ("23:00", 2000)
+    ("20:00", 350),
+    ("19:00", 300),
+    ("21:00", 400),
+    ("17:00", 200),
+    ("23:00", 500)
 ])
 def test_redhift_value_evening_time(time, expected):
     calculator = RedshiftCalculator(
         evening_time="17:00",
         night_time="23:00",
         morning_time="07:00",
-        day_color_temp=5000,
-        night_color_temp=2000
+        day_color_temp=200,
+        night_color_temp=500
     )
     with FG.freeze_time("2020-12-13 %s:00" % time):
         assert calculator.color_temp() == expected
@@ -96,8 +96,8 @@ def test_redhift_value_evening_time_after_midnight(evening, night, now):
         evening_time=evening,
         night_time=night,
         morning_time="07:00",
-        day_color_temp=4000,
-        night_color_temp=2000
+        day_color_temp=200,
+        night_color_temp=400
     )
     with FG.freeze_time("2020-12-13 %s:00" % now):
-        assert calculator.color_temp() == 3000
+        assert calculator.color_temp() == 300

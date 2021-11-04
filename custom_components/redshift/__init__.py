@@ -71,12 +71,18 @@ async def async_setup(hass, config):
         evening_time="17:00",
         night_time="23:00",
         morning_time="06:00",
-        day_color_temp=6500,
+        day_color_temp=6250,
         night_color_temp=2500
     )
     final_config.update(config[DOMAIN])
 
-    redshift_calculator = RedshiftCalculator(**final_config)
+    redshift_calculator = RedshiftCalculator(
+        final_config['evening_time'],
+        final_config['night_time'],
+        final_config['morning_time'],
+        _kelvin_to_mired(final_config['day_color_temp']),
+        _kelvin_to_mired(final_config['night_color_temp']),
+    )
 
     known_states = {}
 
@@ -85,3 +91,7 @@ async def async_setup(hass, config):
     EV.async_track_time_interval(hass, timer_event, DT.timedelta(seconds=1))
 
     return True
+
+
+def _kelvin_to_mired(kelvin):
+    return 1e6/kelvin
