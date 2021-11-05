@@ -8,7 +8,7 @@ import freezegun as FG
 
 from custom_components.redshift import async_setup
 
-from custom_components.redshift.const import DOMAIN
+
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from homeassistant.const import (
@@ -36,7 +36,7 @@ from pytest_homeassistant_custom_component.common import (
     async_fire_time_changed
 )
 
-from .const import MOCK_CONFIG
+DOMAIN = 'redshift'
 
 MIN_MIRED = 160
 MAX_MIRED = 400

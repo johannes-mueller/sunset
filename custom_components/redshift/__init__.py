@@ -6,11 +6,8 @@ import homeassistant.core as HA
 import homeassistant.helpers.event as EV
 
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START,
     STATE_ON,
-    STATE_OFF,
     SERVICE_TURN_ON,
-    SERVICE_TURN_OFF,
     ATTR_ENTITY_ID
 )
 
@@ -19,8 +16,9 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP
 )
 
-from .const import *
 from .calculator import RedshiftCalculator
+
+DOMAIN = 'redshift'
 
 _LOGGER = logging.getLogger('redshift')
 
@@ -36,39 +34,50 @@ async def async_setup(hass, config):
             if hass.states.get(lgt).state == STATE_ON
         }
 
-    async def apply_new_color_temp(lgt):
+    def color_temp_in_limits(lgt):
         min_mired = hass.states.get(lgt).attributes['min_mireds']
         max_mired = hass.states.get(lgt).attributes['max_mireds']
-        color_temp = min(max_mired, max(min_mired, round(redshift_calculator.color_temp())))
+        return min(max_mired, max(min_mired, round(redshift_calculator.color_temp())))
+
+    async def apply_new_color_temp(lgt):
+        color_temp = color_temp_in_limits(lgt)
+
         _LOGGER.debug("%s -> %s", lgt, color_temp)
+
         attrs = {ATTR_ENTITY_ID: lgt, ATTR_COLOR_TEMP: color_temp}
         known_states[lgt] = HA.State(lgt, STATE_ON, attrs)
         await hass.services.async_call('light', SERVICE_TURN_ON, attrs)
+
+    def forget_off_lights(current_states):
+        return dict(
+            filter(lambda x: x[0] in current_states.keys(), known_states.items())
+        )
+
+    async def maybe_apply_new_color_temp(lgt, current_state):
+        known_state = known_states.get(lgt)
+        known_color_temp = None if known_state is None else known_state.attributes.get(ATTR_COLOR_TEMP)
+        current_color_temp = current_state.attributes.get(ATTR_COLOR_TEMP)
+
+        light_just_went_on = known_state is None
+        nobody_changed_color_temp_since_last_time = known_color_temp == current_color_temp
+
+        _LOGGER.debug("%s: %s %s" % (lgt, known_color_temp, current_color_temp))
+        if nobody_changed_color_temp_since_last_time or light_just_went_on:
+            await apply_new_color_temp(lgt)
 
     async def timer_event(event):
         nonlocal known_states
 
         await hass.async_block_till_done()
 
-        new_states = fetch_light_states()
-        known_states = dict(
-            filter(lambda x: x[0] in new_states.keys(), known_states.items())
-        )
+        current_states = fetch_light_states()
+        known_states = forget_off_lights(current_states)
 
         if inactive():
             return
 
-        for lgt, new_state in new_states.items():
-            known_state = known_states.get(lgt)
-            known_color_temp = None if known_state is None else known_state.attributes.get(ATTR_COLOR_TEMP)
-            new_color_temp = new_state.attributes.get(ATTR_COLOR_TEMP)
-
-            light_just_went_on = known_state is None
-            nobody_changed_color_temp_since_last_time = known_color_temp == new_color_temp
-
-            _LOGGER.debug("%s: %s %s" % (lgt, known_color_temp, new_color_temp))
-            if nobody_changed_color_temp_since_last_time or light_just_went_on:
-                await apply_new_color_temp(lgt)
+        for lgt, current_state in current_states.items():
+            await maybe_apply_new_color_temp(lgt, current_state)
 
     final_config = dict(
         evening_time="17:00",

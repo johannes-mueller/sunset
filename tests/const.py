@@ -1,3 +1,0 @@
-
-
-MOCK_CONFIG = {}
