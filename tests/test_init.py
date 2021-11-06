@@ -537,6 +537,7 @@ async def test_redshift_night_to_day_non_default_morning_time(
 
     await turn_on_lights(hass, ['light_1'])
 
+    old_color_temp = None
     for time, expected in zip(["04:30", "05:30", "06:30"], expected_color_temps):
         time = DT.datetime.fromisoformat("2020-12-13 %s:00" % time)
 
@@ -545,8 +546,7 @@ async def test_redshift_night_to_day_non_default_morning_time(
 
         await hass.async_block_till_done()
 
-        assert len(turn_on_service) == 1
-        assert turn_on_service.pop().data[ATTR_COLOR_TEMP] == expected
+        assert hass.states.get('light.light_1').attributes.get(ATTR_COLOR_TEMP) == expected
 
 
 async def test_redshift_during_evening_rounding_error(
@@ -569,7 +569,7 @@ async def test_redshift_during_evening_rounding_error(
     assert turn_on_service.pop().data[ATTR_COLOR_TEMP] == 280
 
     for i in range(10):
-        start_at_noon.tick(10.0)
+        start_at_noon.tick(120.0)
         async_fire_time_changed_now_time(hass)
         await hass.async_block_till_done()
         assert len(turn_on_service) == 1
@@ -616,3 +616,31 @@ async def test_redshift_night_to_day_exceed_mired(
 
     assert len(turn_on_service) == 1
     assert turn_on_service[0].data[ATTR_COLOR_TEMP] == 160
+
+
+
+async def test_redshift_no_change(
+        hass,
+        lights,
+        turn_on_service,
+        start_at_noon
+):
+    assert await async_setup(hass, {DOMAIN: {}})
+
+    await turn_on_lights(hass, ['light_1'])
+
+    start_at_noon.tick(600)
+    async_fire_time_changed_now_time(hass)
+
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 1
+
+    turn_on_service.pop()
+
+    start_at_noon.tick(1)
+    async_fire_time_changed_now_time(hass)
+
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 0

@@ -41,6 +41,10 @@ async def async_setup(hass, config):
 
     async def apply_new_color_temp(lgt):
         color_temp = color_temp_in_limits(lgt)
+        current_color_temp = hass.states.get(lgt).attributes.get(ATTR_COLOR_TEMP)
+
+        if color_temp == current_color_temp:
+            return
 
         _LOGGER.debug("%s -> %s", lgt, color_temp)
 
