@@ -137,11 +137,22 @@ def some_night_time():
     return DT.datetime.fromisoformat("2020-12-14 04:00:00")
 
 
-async def test_no_call_right_after_setup(hass, turn_on_service, lights, some_day_time):
+def async_fire_time_changed_now_time(hass):
+    #print(DT.datetime.now(), DT.datetime.now())
+    async_fire_time_changed(hass, DT.datetime.now(), fire_all=True)
+
+async def test_no_call_right_after_setup(
+        hass,
+        turn_on_service,
+        lights,
+        start_at_noon,
+        some_day_time
+):
     assert await async_setup(hass, {DOMAIN: {}})
     await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    start_at_noon.move_to(some_day_time)
+    async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 0
@@ -158,7 +169,8 @@ async def test_service_turn_on_call_two_lights_two_on(
 
     await turn_on_lights(hass, ['light_1', 'light_2'])
 
-    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    start_at_noon.move_to(some_day_time)
+    async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 2
@@ -169,13 +181,15 @@ async def test_service_active_inactive(
         lights,
         turn_on_service,
         start_at_noon,
-        some_day_time
+        some_day_time,
+        some_evening_time
 ):
     assert await async_setup(hass, {DOMAIN: {}})
 
     await turn_on_lights(hass, ['light_1'])
 
-    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    start_at_noon.move_to(some_evening_time)
+    async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 1
@@ -184,14 +198,16 @@ async def test_service_active_inactive(
 
     hass.states.async_set('redshift.active', False)
 
-    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    start_at_noon.tick(600)
+    async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 0
 
     hass.states.async_set('redshift.active', True)
 
-    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    start_at_noon.tick(600)
+    async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 1
@@ -202,13 +218,15 @@ async def test_light_goes_on_while_inactive(
         lights,
         turn_on_service,
         start_at_noon,
-        some_day_time
+        some_day_time,
+        some_evening_time
 ):
     assert await async_setup(hass, {DOMAIN: {}})
 
     await turn_on_lights(hass, ['light_1'])
 
-    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    start_at_noon.move_to(some_day_time)
+    async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 1
@@ -219,7 +237,8 @@ async def test_light_goes_on_while_inactive(
 
     hass.states.async_set('light.light_1', STATE_OFF, attributes=MINMAX_MIREDS)
 
-    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    start_at_noon.move_to(some_evening_time)
+    async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 0
@@ -228,14 +247,16 @@ async def test_light_goes_on_while_inactive(
     attrs.update(MINMAX_MIREDS)
     hass.states.async_set('light.light_1', STATE_ON, attrs)
 
-    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    start_at_noon.tick(600)
+    async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 0
 
     hass.states.async_set('redshift.active', True)
 
-    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    start_at_noon.tick(600)
+    async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 1
@@ -246,13 +267,14 @@ async def test_override_while_active_then_reactive(
         lights,
         turn_on_service,
         start_at_noon,
-        some_day_time
+        some_evening_time
 ):
     assert await async_setup(hass, {DOMAIN: {}})
 
     await turn_on_lights(hass, ['light_1'])
 
-    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    start_at_noon.move_to(some_evening_time)
+    async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 1
@@ -261,21 +283,24 @@ async def test_override_while_active_then_reactive(
 
     hass.states.async_set('light.light_1', STATE_ON, attributes={ATTR_COLOR_TEMP: 390})
 
-    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    start_at_noon.tick(600)
+    async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 0
 
     hass.states.async_set('redshift.active', False)
 
-    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    start_at_noon.tick(600)
+    async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 0
 
     hass.states.async_set('redshift.active', True)
 
-    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    start_at_noon.tick(600)
+    async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 0
@@ -292,7 +317,8 @@ async def test_service_turn_on_call_four_lights_four_on(
 
     await turn_on_lights(hass, ['light_1', 'light_2', 'light_3', 'light_4'])
 
-    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    start_at_noon.move_to(some_day_time)
+    async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 4
@@ -309,7 +335,8 @@ async def test_service_turn_on_call_four_lights_1_3_on(
 
     await turn_on_lights(hass, ['light_1', 'light_3'])
 
-    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    start_at_noon.move_to(some_day_time)
+    async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 2
@@ -323,20 +350,22 @@ async def test_service_turn_on_call_four_lights_3_manually_set_color_temp(
         more_lights,
         turn_on_service,
         start_at_noon,
-        some_day_time
+        some_evening_time
 ):
     assert await async_setup(hass, {DOMAIN: {}})
 
     await turn_on_lights(hass, ['light_1', 'light_3'])
 
-    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    start_at_noon.move_to(some_evening_time)
+    async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
     turn_on_service.pop()
     turn_on_service.pop()
 
     hass.states.async_set('light.light_3', STATE_ON, attributes={ATTR_COLOR_TEMP: 390})
-    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    start_at_noon.tick(600)
+    async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 1
@@ -346,7 +375,8 @@ async def test_service_turn_on_call_four_lights_3_manually_set_color_temp(
     turn_on_service.pop()
 
     hass.states.async_set('light.light_3', STATE_OFF, attributes=MINMAX_MIREDS)
-    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    start_at_noon.tick(600)
+    async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 1
@@ -357,7 +387,8 @@ async def test_service_turn_on_call_four_lights_3_manually_set_color_temp(
 
     await turn_on_lights(hass, ['light_3'])
 
-    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    start_at_noon.tick(600)
+    async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 2
@@ -377,7 +408,7 @@ async def test_redshift_day_to_night(
     await turn_on_lights(hass, ['light_1'])
 
     start_at_noon.move_to(some_night_time)
-    async_fire_time_changed(hass, some_night_time, fire_all=True)
+    async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 1
@@ -396,7 +427,7 @@ async def test_redshift_night_to_day(
     await turn_on_lights(hass, ['light_1'])
 
     start_at_night.move_to(some_day_time)
-    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    async_fire_time_changed_now_time(hass)
 
     await hass.async_block_till_done()
 
@@ -417,7 +448,7 @@ async def test_redshift_day_to_night_non_default_night_color_temp(
     await turn_on_lights(hass, ['light_1'])
 
     start_at_noon.move_to(some_night_time)
-    async_fire_time_changed(hass, some_night_time, fire_all=True)
+    async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 1
@@ -437,7 +468,7 @@ async def test_redshift_night_to_day_non_default_day_color_temp(
     await turn_on_lights(hass, ['light_1'])
 
     start_at_night.move_to(some_day_time)
-    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    async_fire_time_changed_now_time(hass)
 
     await hass.async_block_till_done()
 
@@ -458,7 +489,7 @@ async def test_redshift_to_evening(
     await turn_on_lights(hass, ['light_1'])
 
     start_at_noon.move_to(some_evening_time)
-    async_fire_time_changed(hass, some_evening_time, fire_all=True)
+    async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 1
@@ -481,7 +512,7 @@ async def test_redshift_to_evening_non_default_evening_range(
     await turn_on_lights(hass, ['light_1'])
 
     start_at_noon.move_to(some_evening_time)
-    async_fire_time_changed(hass, some_evening_time, fire_all=True)
+    async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 1
@@ -510,7 +541,7 @@ async def test_redshift_night_to_day_non_default_morning_time(
         time = DT.datetime.fromisoformat("2020-12-13 %s:00" % time)
 
         start_at_night.move_to(time)
-        async_fire_time_changed(hass, time, fire_all=True)
+        async_fire_time_changed_now_time(hass)
 
         await hass.async_block_till_done()
 
@@ -531,7 +562,7 @@ async def test_redshift_during_evening_rounding_error(
     await turn_on_lights(hass, ['light_1'])
 
     start_at_noon.move_to(some_evening_time)
-    async_fire_time_changed(hass, some_evening_time, fire_all=True)
+    async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 1
@@ -539,9 +570,7 @@ async def test_redshift_during_evening_rounding_error(
 
     for i in range(10):
         start_at_noon.tick(10.0)
-        print(start_at_noon())
-        async_fire_time_changed(hass, start_at_noon(), fire_all=True)
-
+        async_fire_time_changed_now_time(hass)
         await hass.async_block_till_done()
         assert len(turn_on_service) == 1
 
@@ -561,12 +590,11 @@ async def test_redshift_day_to_night_exceed_mired(
     await turn_on_lights(hass, ['light_1'])
 
     start_at_noon.move_to(some_night_time)
-    async_fire_time_changed(hass, some_night_time, fire_all=True)
+    async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 1
     assert turn_on_service[0].data[ATTR_COLOR_TEMP] == 400
-
 
 
 async def test_redshift_night_to_day_exceed_mired(
@@ -582,7 +610,7 @@ async def test_redshift_night_to_day_exceed_mired(
     await turn_on_lights(hass, ['light_1'])
 
     start_at_night.move_to(some_day_time)
-    async_fire_time_changed(hass, some_day_time, fire_all=True)
+    async_fire_time_changed_now_time(hass)
 
     await hass.async_block_till_done()
 
