@@ -34,14 +34,17 @@ async def async_setup(hass, config):
             if hass.states.get(lgt).state == STATE_ON
         }
 
+    def current_target_color_temp():
+        return round(redshift_calculator.color_temp())
+
     def color_temp_in_limits(lgt):
         min_mired = hass.states.get(lgt).attributes['min_mireds']
         max_mired = hass.states.get(lgt).attributes['max_mireds']
-        return min(max_mired, max(min_mired, round(redshift_calculator.color_temp())))
+        return min(max_mired, max(min_mired, current_target_color_temp()))
 
     async def apply_new_color_temp(lgt):
         color_temp = color_temp_in_limits(lgt)
-        current_color_temp = hass.states.get(lgt).attributes.get(ATTR_COLOR_TEMP)
+        current_color_temp = _color_temp_of_state(hass.states.get(lgt))
 
         if color_temp == current_color_temp:
             return
@@ -59,8 +62,8 @@ async def async_setup(hass, config):
 
     async def maybe_apply_new_color_temp(lgt, current_state):
         known_state = known_states.get(lgt)
-        known_color_temp = None if known_state is None else known_state.attributes.get(ATTR_COLOR_TEMP)
-        current_color_temp = current_state.attributes.get(ATTR_COLOR_TEMP)
+        known_color_temp = _color_temp_of_state(known_state)
+        current_color_temp = _color_temp_of_state(current_state)
 
         light_just_went_on = known_state is None
         nobody_changed_color_temp_since_last_time = known_color_temp == current_color_temp
@@ -83,27 +86,33 @@ async def async_setup(hass, config):
         for lgt, current_state in current_states.items():
             await maybe_apply_new_color_temp(lgt, current_state)
 
-    final_config = dict(
-        evening_time="17:00",
-        night_time="23:00",
-        morning_time="06:00",
-        day_color_temp=6250,
-        night_color_temp=2500
-    )
-    final_config.update(config[DOMAIN])
+    def finalized_config():
+        final_config = dict(
+            evening_time="17:00",
+            night_time="23:00",
+            morning_time="06:00",
+            day_color_temp=6250,
+            night_color_temp=2500
+        )
+        final_config.update(config[DOMAIN])
+        return final_config
 
-    redshift_calculator = RedshiftCalculator(
-        final_config['evening_time'],
-        final_config['night_time'],
-        final_config['morning_time'],
-        _kelvin_to_mired(final_config['day_color_temp']),
-        _kelvin_to_mired(final_config['night_color_temp']),
-    )
+    def make_redshift_calculator():
+        return RedshiftCalculator(
+            final_config['evening_time'],
+            final_config['night_time'],
+            final_config['morning_time'],
+            _kelvin_to_mired(final_config['day_color_temp']),
+            _kelvin_to_mired(final_config['night_color_temp']),
+        )
+
+    final_config = finalized_config()
+
+    redshift_calculator = make_redshift_calculator()
 
     known_states = {}
 
     hass.states.async_set(DOMAIN+'.active', True)
-
     EV.async_track_time_interval(hass, timer_event, DT.timedelta(seconds=1))
 
     return True
@@ -111,3 +120,9 @@ async def async_setup(hass, config):
 
 def _kelvin_to_mired(kelvin):
     return 1e6/kelvin
+
+
+def _color_temp_of_state(state):
+    if state is None:
+        return None
+    return state.attributes.get(ATTR_COLOR_TEMP)
