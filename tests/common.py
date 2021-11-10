@@ -58,16 +58,23 @@ async def make_lights(hass, lights):
         hass.states.async_set('light.'+lgt, STATE_OFF, attributes=MINMAX_MIREDS)
 
 
+def _time_forward(time_string):
+    target_time = DT.datetime.combine(DT.datetime.today(), DT.time.fromisoformat(time_string))
+    if target_time < DT.datetime.now():
+        target_time += DT.timedelta(days=1)
+    return target_time
+
+
 def some_day_time():
-    return DT.datetime.fromisoformat("2020-12-13 14:00:00")
+    return _time_forward("14:00:00")
 
 
 def some_evening_time():
-    return DT.datetime.fromisoformat("2020-12-13 20:00:00")
+    return _time_forward("20:00:00")
 
 
 def some_night_time():
-    return DT.datetime.fromisoformat("2020-12-14 04:00:00")
+    return _time_forward("04:00:00")
 
 
 def async_fire_time_changed_now_time(hass):

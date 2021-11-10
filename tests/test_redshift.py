@@ -161,7 +161,7 @@ async def test_override_while_active_then_reactive(
 
     turn_on_service.pop()
 
-    hass.states.async_set('light.light_1', STATE_ON, attributes={ATTR_COLOR_TEMP: 390})
+    await turn_on_lights(hass, ['light_1'], color_temp=390)
 
     start_at_noon.tick(600)
     async_fire_time_changed_now_time(hass)
