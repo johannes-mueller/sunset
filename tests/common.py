@@ -32,14 +32,17 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def turn_on_lights(hass, lights):
+async def turn_on_lights(hass, lights, color_temp=None):
     """Turn on `lights`."""
     attrs = {
-        ATTR_COLOR_TEMP: 380,
         'min_mireds': MIN_MIRED,
         'max_mireds': MAX_MIRED
     }
     for lgt in lights:
+        state = hass.states.get(lgt)
+        color_temp = color_temp or _color_temp_of_state(state) or 380
+        attrs[ATTR_COLOR_TEMP] = color_temp
+
         hass.states.async_set('light.'+lgt, STATE_ON, attrs)
 
 
@@ -69,3 +72,8 @@ def some_night_time():
 
 def async_fire_time_changed_now_time(hass):
     async_fire_time_changed(hass, DT.datetime.now(), fire_all=True)
+def _color_temp_of_state(state):
+    if state is None:
+        return None
+    return state.attributes.get(ATTR_COLOR_TEMP)
+
