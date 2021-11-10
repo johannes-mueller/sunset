@@ -61,6 +61,9 @@ async def async_setup(hass, config):
         )
 
     async def maybe_apply_new_color_temp(lgt, current_state):
+        if lgt in lights_not_to_touch:
+            return
+
         known_state = known_states.get(lgt)
         known_color_temp = _color_temp_of_state(known_state)
         current_color_temp = _color_temp_of_state(current_state)
@@ -85,6 +88,12 @@ async def async_setup(hass, config):
 
         for lgt, current_state in current_states.items():
             await maybe_apply_new_color_temp(lgt, current_state)
+
+    def dont_touch(event):
+        lights_not_to_touch.add(event.data.get(ATTR_ENTITY_ID))
+
+    def handle_again(event):
+        lights_not_to_touch.remove(event.data.get(ATTR_ENTITY_ID))
 
     def finalized_config():
         final_config = dict(
@@ -112,6 +121,10 @@ async def async_setup(hass, config):
 
     known_states = {}
 
+    lights_not_to_touch = set()
+
+    hass.services.async_register(DOMAIN, 'dont_touch', dont_touch)
+    hass.services.async_register(DOMAIN, 'handle_again', handle_again)
     hass.states.async_set(DOMAIN+'.active', True)
     EV.async_track_time_interval(hass, timer_event, DT.timedelta(seconds=1))
 
