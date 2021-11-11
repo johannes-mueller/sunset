@@ -48,15 +48,25 @@ switched on.  Once the light goes off and on again, its color temperature will
 be again governed by the redshift.
 
 
-## Planned features
+### Forbidding Redshift to touch a specific light
 
-* Light dimming: automatically dim all the lights by a certain amount at a
-  certain evening time to signal "now its time for bed".
+There are the services `redshift.dont_touch` and `redshift.handle_again`. They
+both take an `entity_id` as parameter.  As you would guess from the names
+`redshift.dont_touch` makes Redshift not manipulate a certain light, whereas
+`redshift.handle_again** makes Redshift control the light again.
 
+**Limitation**: This does not work four groups of lights as of now.
+
+
+### Planned features
+
+Shift the color temperature back in the morning over a defined time.  As of now
+the backshift to day temperature happens instantaneously.
 
 ## Status
 
-Just hacked it. Deployed it today on my system. Let's see if it works. 😆
+Hacked it like a week ago and deployed it on my system.  So far it seems to
+work fine.
 
 
 ## Installation
