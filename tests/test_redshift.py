@@ -564,7 +564,7 @@ async def test_redshift_handle_again_non_ignored(
     await hass.services.async_call('redshift', 'handle_again', {ATTR_ENTITY_ID: 'light.light_2'})
 
 
-async def test_redshift_go_manual(
+async def test_redshift_deactivate_with_color_temp(
         hass,
         lights,
         turn_on_service,
@@ -573,8 +573,10 @@ async def test_redshift_go_manual(
     assert await async_setup(hass, {DOMAIN: {}})
 
     await turn_on_lights(hass, ['light_1', 'light_2'])
-    await hass.services.async_call('redshift', 'manual', {'color_temp': 2571})
+    await hass.services.async_call('redshift', 'deactivate', {'color_temp': 2571})
     await hass.async_block_till_done()
+
+    assert hass.states.get('redshift.active').state == 'False'
 
     assert turn_on_service.pop().data[ATTR_COLOR_TEMP] == 389
     assert turn_on_service.pop().data[ATTR_COLOR_TEMP] == 389
@@ -582,6 +584,23 @@ async def test_redshift_go_manual(
     start_at_noon.tick(600)
     async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 0
+
+
+async def test_redshift_deactivate_no_color_temp(
+        hass,
+        lights,
+        turn_on_service,
+        start_at_noon
+):
+    assert await async_setup(hass, {DOMAIN: {}})
+
+    await turn_on_lights(hass, ['light_1', 'light_2'])
+    await hass.services.async_call('redshift', 'deactivate', {})
+    await hass.async_block_till_done()
+
+    assert hass.states.get('redshift.active').state == 'False'
 
     assert len(turn_on_service) == 0
 
@@ -595,10 +614,14 @@ async def test_redshift_go_redshift(
     assert await async_setup(hass, {DOMAIN: {}})
 
     await turn_on_lights(hass, ['light_1', 'light_2'])
-    await hass.services.async_call('redshift', 'manual', {'color_temp': 2571})
-
-    await hass.services.async_call('redshift', 'manual', {})
+    await hass.services.async_call('redshift', 'deactivate', {'color_temp': 2571})
     await hass.async_block_till_done()
+    assert hass.states.get('redshift.active').state == 'False'
+
+    await hass.services.async_call('redshift', 'activate', {})
+    await hass.async_block_till_done()
+
+    assert hass.states.get('redshift.active').state == 'True'
 
     assert turn_on_service.pop().data[ATTR_COLOR_TEMP] == 160
     assert turn_on_service.pop().data[ATTR_COLOR_TEMP] == 160

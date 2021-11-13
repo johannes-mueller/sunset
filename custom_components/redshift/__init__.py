@@ -95,13 +95,20 @@ async def async_setup(hass, config):
     def handle_again(event):
         lights_not_to_touch.remove(event.data.get(ATTR_ENTITY_ID))
 
-    async def go_manual(event):
+    async def deactivate(event):
         nonlocal manual_color_temp
         manual_color_temp = event.data.get('color_temp')
 
         if manual_color_temp is not None:
             manual_color_temp = round(_kelvin_to_mired(manual_color_temp))
+            await timer_event(None)
 
+        hass.states.async_set(DOMAIN+'.active', False)
+
+    async def activate(_):
+        nonlocal manual_color_temp
+        manual_color_temp = None
+        hass.states.async_set(DOMAIN+'.active', True)
         await timer_event(None)
 
     def finalized_config():
@@ -136,7 +143,9 @@ async def async_setup(hass, config):
 
     hass.services.async_register(DOMAIN, 'dont_touch', dont_touch)
     hass.services.async_register(DOMAIN, 'handle_again', handle_again)
-    hass.services.async_register(DOMAIN, 'manual', go_manual)
+    hass.services.async_register(DOMAIN, 'activate', activate)
+    hass.services.async_register(DOMAIN, 'deactivate', deactivate)
+
     hass.states.async_set(DOMAIN+'.active', True)
     EV.async_track_time_interval(hass, timer_event, DT.timedelta(seconds=1))
 
