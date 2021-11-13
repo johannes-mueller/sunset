@@ -6,11 +6,11 @@ class RedshiftCalculator:
 
     def __init__(
             self,
-            evening_time,
-            night_time,
-            morning_time,
-            day_color_temp,
-            night_color_temp
+            evening_time="17:00",
+            night_time="23:00",
+            morning_time="07:00",
+            day_color_temp=200,
+            night_color_temp=600
     ):
         self._day_color_temp = day_color_temp
         self._night_color_temp = night_color_temp

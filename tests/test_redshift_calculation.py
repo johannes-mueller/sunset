@@ -7,6 +7,10 @@ import freezegun as FG
 from custom_components.redshift.calculator import RedshiftCalculator
 
 
+def test_setup_redshift_calculator_default():
+    RedshiftCalculator()
+
+
 def test_setup_redshift_calculator():
     calculator = RedshiftCalculator(
         evening_time="17:00",
