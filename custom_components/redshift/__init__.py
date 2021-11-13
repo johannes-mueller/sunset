@@ -35,7 +35,7 @@ async def async_setup(hass, config):
         }
 
     def current_target_color_temp():
-        return round(redshift_calculator.color_temp())
+        return manual_color_temp or round(redshift_calculator.color_temp())
 
     def color_temp_in_limits(lgt):
         min_mired = hass.states.get(lgt).attributes['min_mireds']
@@ -95,6 +95,13 @@ async def async_setup(hass, config):
     def handle_again(event):
         lights_not_to_touch.remove(event.data.get(ATTR_ENTITY_ID))
 
+    def go_manual(event):
+        nonlocal manual_color_temp
+        manual_color_temp = event.data.get('color_temp')
+
+        if manual_color_temp is not None:
+            manual_color_temp = round(_kelvin_to_mired(manual_color_temp))
+
     def finalized_config():
         final_config = dict(
             evening_time="17:00",
@@ -121,10 +128,13 @@ async def async_setup(hass, config):
 
     known_states = {}
 
+    manual_color_temp = None
+
     lights_not_to_touch = set()
 
     hass.services.async_register(DOMAIN, 'dont_touch', dont_touch)
     hass.services.async_register(DOMAIN, 'handle_again', handle_again)
+    hass.services.async_register(DOMAIN, 'manual', go_manual)
     hass.states.async_set(DOMAIN+'.active', True)
     EV.async_track_time_interval(hass, timer_event, DT.timedelta(seconds=1))
 
