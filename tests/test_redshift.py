@@ -576,10 +576,6 @@ async def test_redshift_go_manual(
     await hass.services.async_call('redshift', 'manual', {'color_temp': 2571})
     await hass.async_block_till_done()
 
-    start_at_noon.tick(1)
-    async_fire_time_changed_now_time(hass)
-    await hass.async_block_till_done()
-
     assert turn_on_service.pop().data[ATTR_COLOR_TEMP] == 389
     assert turn_on_service.pop().data[ATTR_COLOR_TEMP] == 389
 
@@ -600,12 +596,8 @@ async def test_redshift_go_redshift(
 
     await turn_on_lights(hass, ['light_1', 'light_2'])
     await hass.services.async_call('redshift', 'manual', {'color_temp': 2571})
-    await hass.async_block_till_done()
-    await hass.services.async_call('redshift', 'manual', {})
-    await hass.async_block_till_done()
 
-    start_at_noon.tick(1)
-    async_fire_time_changed_now_time(hass)
+    await hass.services.async_call('redshift', 'manual', {})
     await hass.async_block_till_done()
 
     assert turn_on_service.pop().data[ATTR_COLOR_TEMP] == 160

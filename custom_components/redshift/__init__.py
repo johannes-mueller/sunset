@@ -95,12 +95,14 @@ async def async_setup(hass, config):
     def handle_again(event):
         lights_not_to_touch.remove(event.data.get(ATTR_ENTITY_ID))
 
-    def go_manual(event):
+    async def go_manual(event):
         nonlocal manual_color_temp
         manual_color_temp = event.data.get('color_temp')
 
         if manual_color_temp is not None:
             manual_color_temp = round(_kelvin_to_mired(manual_color_temp))
+
+        await timer_event(None)
 
     def finalized_config():
         final_config = dict(
