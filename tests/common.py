@@ -23,6 +23,9 @@ from homeassistant.helpers.entity_component import (
     EntityComponent,
 )
 
+from homeassistant.helpers import entity_registry
+
+
 from .const import (
     MIN_MIRED,
     MAX_MIRED,
@@ -51,11 +54,18 @@ async def make_lights(hass, lights):
     component = EntityComponent(_LOGGER, 'light', hass)
 
     await component.async_add_entities([
-        MockEntity(entity_id='light.'+lgt) for lgt in lights
+        _make_light(hass, lgt) for lgt in lights
     ])
 
     for lgt in lights:
         hass.states.async_set('light.'+lgt, STATE_OFF, attributes=MINMAX_MIREDS)
+
+
+def _make_light(hass, light):
+    entity_reg = entity_registry.async_get(hass)
+    entity_reg.async_get_or_create('light', '', light, device_id='device_id_'+light)
+    return MockEntity(entity_id='light.'+light, device_id='device_id_'+light)
+
 
 
 def _time_forward(time_string):
@@ -83,4 +93,3 @@ def _color_temp_of_state(state):
     if state is None:
         return None
     return state.attributes.get(ATTR_COLOR_TEMP)
-

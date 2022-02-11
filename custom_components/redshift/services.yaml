@@ -1,0 +1,14 @@
+
+dont_touch:
+  name: Don't touch
+  description: Don't manipulate one light with the redshift.
+  target:
+    entity:
+      domain: light
+
+handle_again:
+  name: Handle again
+  description: Again manipulate one light with the redshift.
+  target:
+    entity:
+      domain: light

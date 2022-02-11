@@ -4,11 +4,13 @@ import datetime as DT
 
 import homeassistant.core as HA
 import homeassistant.helpers.event as EV
+from homeassistant.helpers import entity_registry
 
 from homeassistant.const import (
     STATE_ON,
     SERVICE_TURN_ON,
-    ATTR_ENTITY_ID
+    ATTR_ENTITY_ID,
+    ATTR_DEVICE_ID
 )
 
 from homeassistant.components.light import (
@@ -90,10 +92,19 @@ async def async_setup(hass, config):
             await maybe_apply_new_color_temp(lgt, current_state)
 
     def dont_touch(event):
+        for entry in entities_from_device_id(event):
+            lights_not_to_touch.add(entry.entity_id)
         lights_not_to_touch.add(event.data.get(ATTR_ENTITY_ID))
 
     def handle_again(event):
+        for entry in entities_from_device_id(event):
+            lights_not_to_touch.remove(entry.entity_id)
         lights_not_to_touch.remove(event.data.get(ATTR_ENTITY_ID))
+
+    def entities_from_device_id(event):
+        entity_reg = entity_registry.async_get(hass)
+        device_id = event.data.get(ATTR_DEVICE_ID)
+        return entity_registry.async_entries_for_device(entity_reg, device_id)
 
     async def deactivate(event):
         nonlocal manual_color_temp
