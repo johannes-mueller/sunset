@@ -94,12 +94,14 @@ async def async_setup(hass, config):
     def dont_touch(event):
         for entry in entities_from_device_id(event):
             lights_not_to_touch.add(entry.entity_id)
-        lights_not_to_touch.add(event.data.get(ATTR_ENTITY_ID))
+        for entity_id in event.data.get(ATTR_ENTITY_ID, []):
+            lights_not_to_touch.add(entity_id)
 
     def handle_again(event):
         for entry in entities_from_device_id(event):
             lights_not_to_touch.remove(entry.entity_id)
-        lights_not_to_touch.remove(event.data.get(ATTR_ENTITY_ID))
+        for entity_id in event.data.get(ATTR_ENTITY_ID, []):
+            lights_not_to_touch.remove(entity_id)
 
     def entities_from_device_id(event):
         entity_reg = entity_registry.async_get(hass)

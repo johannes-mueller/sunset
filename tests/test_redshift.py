@@ -526,7 +526,7 @@ async def test_redshift_dont_touch(
     assert await async_setup(hass, {DOMAIN: {}})
 
     await turn_on_lights(hass, ['light_1', 'light_2'])
-    await hass.services.async_call('redshift', 'dont_touch', {ATTR_ENTITY_ID: 'light.light_2'})
+    await hass.services.async_call('redshift', 'dont_touch', {ATTR_ENTITY_ID: ['light.light_2']})
     await hass.async_block_till_done()
 
     start_at_noon.tick(600)
@@ -537,7 +537,7 @@ async def test_redshift_dont_touch(
     assert turn_on_service.pop().data[ATTR_ENTITY_ID] == 'light.light_1'
     assert len(turn_on_service) == 0
 
-    await hass.services.async_call('redshift', 'dont_touch', {ATTR_ENTITY_ID: 'light.light_1'})
+    await hass.services.async_call('redshift', 'dont_touch', {ATTR_ENTITY_ID: ['light.light_1']})
     await hass.async_block_till_done()
 
     start_at_noon.move_to(some_evening_time())
@@ -547,7 +547,7 @@ async def test_redshift_dont_touch(
 
     assert len(turn_on_service) == 0
 
-    await hass.services.async_call('redshift', 'handle_again', {ATTR_ENTITY_ID: 'light.light_2'})
+    await hass.services.async_call('redshift', 'handle_again', {ATTR_ENTITY_ID: ['light.light_2']})
     await hass.async_block_till_done()
 
     start_at_noon.tick(600)
