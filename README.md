@@ -30,7 +30,7 @@ You can configure three times in your `configuration.yaml`.
 
 ### Color temperature translation behavior
 
-The component take over the color temperature of all the lights available in
+The component takes over the color temperature of all the lights available in
 the system.  Between `morning_time` and `evening_time` the color temperature
 will be set to the level of `day_color_temp`.  Once `evening_time` is reached
 the color temperature will slowly transition to `night_color_temp`.  The
@@ -55,17 +55,35 @@ both take an `entity_id` as parameter.  As you would guess from the names
 `redshift.dont_touch` makes Redshift not manipulate a certain light, whereas
 `redshift.handle_again** makes Redshift control the light again.
 
-**Limitation**: This does not work four groups of lights as of now.
+Lights have to be specified as lists of entities, an area or a device.
+
+Be aware that the lights not to be touched are not persistent.  They are
+forgotten as soon as the component is restarted.  So it is just meant as a
+temporary measure.
+
+
+### Activating and deactivating
+
+You can use the services `redshift.activate` and `redshift.deactivate` to
+activate and deactivate the redshift altogether.  The `redshift.deactivate`
+service takes an optional `color_temp` parameter to apply a certain color
+temperature to all lights.  If it is not given the color temperature is not
+changed on deactivation.
 
 
 ### Planned features
 
-Shift the color temperature back in the morning over a defined time.  As of now
-the backshift to day temperature happens instantaneously.
+* Shift the color temperature back in the morning over a defined time.  As of now
+  the back shift to day temperature happens instantaneously.
+
+* Configure lights that are generally ignored by redshift.
+
+No ETAs given.
+
 
 ## Status
 
-Hacked it like a week ago and deployed it on my system.  So far it seems to
+Hacked it like a couple of months ago and deployed it on my system.  So far it seems to
 work fine.
 
 
