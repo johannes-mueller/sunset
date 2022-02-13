@@ -1,14 +1,33 @@
 
+activate:
+  name: Activate
+  description: Activates the redshift.
+
+deactivate:
+  name: Deactivate
+  description: Deactivates the redshift optionally and sets all lights to a given temperature.
+  fields:
+    color_temp:
+      name: Manual color temperature (Kelvin)
+      description: Color temperature for the lights in Kelvin.
+      advanced: true
+      selector:
+        number:
+          min: 2000
+          max: 6500
+          step: 100
+          unit_of_measurement: K
+
 dont_touch:
   name: Don't touch
-  description: Don't manipulate one light with the redshift.
+  description: Don't manipulate given lights with the redshift.
   target:
     entity:
       domain: light
 
 handle_again:
   name: Handle again
-  description: Again manipulate one light with the redshift.
+  description: Again manipulate given lights with the redshift.
   target:
     entity:
       domain: light
