@@ -49,22 +49,22 @@ async def turn_on_lights(hass, lights, color_temp=None):
         hass.states.async_set('light.'+lgt, STATE_ON, attrs)
 
 
-async def make_lights(hass, lights):
+async def make_lights(hass, lights, area_name):
     """Setup light entities `lights`."""
     component = EntityComponent(_LOGGER, 'light', hass)
 
     await component.async_add_entities([
-        _make_light(hass, lgt) for lgt in lights
+        _make_light(hass, lgt, area_name) for lgt in lights
     ])
 
     for lgt in lights:
         hass.states.async_set('light.'+lgt, STATE_OFF, attributes=MINMAX_MIREDS)
 
 
-def _make_light(hass, light):
+def _make_light(hass, light, area_id):
     entity_reg = entity_registry.async_get(hass)
-    entity_reg.async_get_or_create('light', '', light, device_id='device_id_'+light)
-    return MockEntity(entity_id='light.'+light, device_id='device_id_'+light)
+    entity_reg.async_get_or_create('light', '', light, device_id='device_id_'+light, area_id=area_id)
+    return MockEntity(entity_id='light.'+light, device_id='device_id_'+light, area_id=area_id)
 
 
 

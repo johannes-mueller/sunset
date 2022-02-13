@@ -3,6 +3,7 @@ import pytest
 import datetime as DT
 
 from homeassistant.const import (
+    ATTR_AREA_ID,
     ATTR_ENTITY_ID,
     ATTR_DEVICE_ID,
     STATE_OFF,
@@ -598,7 +599,11 @@ async def test_redshift_dont_touch_devices(
 
     assert len(turn_on_service) == 0
 
-    await hass.services.async_call('redshift', 'handle_again', {ATTR_DEVICE_ID: 'device_id_light_1'})
+    await hass.services.async_call(
+        'redshift',
+        'handle_again',
+        {ATTR_DEVICE_ID: 'device_id_light_1'}
+    )
     await hass.async_block_till_done()
 
     start_at_noon.tick(600)
@@ -606,6 +611,70 @@ async def test_redshift_dont_touch_devices(
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 1
+
+
+async def test_redshift_dont_touch_areas(
+        hass,
+        lights,
+        more_lights,
+        turn_on_service,
+        start_at_noon
+):
+    assert await async_setup(hass, {DOMAIN: {}})
+    await turn_on_lights(hass, ['light_1', 'light_2', 'light_3', 'light_4'])
+
+    await hass.services.async_call(
+        'redshift',
+        'dont_touch',
+        {ATTR_AREA_ID: 'area_1'}
+    )
+
+    await hass.async_block_till_done()
+
+    start_at_noon.tick(600)
+    async_fire_time_changed_now_time(hass)
+
+    await hass.async_block_till_done()
+
+    assert {
+        turn_on_service.pop().data[ATTR_ENTITY_ID],
+        turn_on_service.pop().data[ATTR_ENTITY_ID]
+    } == {'light.light_3', 'light.light_4'}
+
+    assert len(turn_on_service) == 0
+
+    await hass.services.async_call(
+        'redshift',
+        'dont_touch',
+        {ATTR_AREA_ID: 'area_2'}
+    )
+
+    await hass.async_block_till_done()
+
+    start_at_noon.tick(600)
+    async_fire_time_changed_now_time(hass)
+
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 0
+
+    await hass.services.async_call(
+        'redshift',
+        'handle_again',
+        {ATTR_AREA_ID: 'area_1'}
+    )
+    await hass.async_block_till_done()
+
+    start_at_noon.tick(600)
+    async_fire_time_changed_now_time(hass)
+    await hass.async_block_till_done()
+
+    assert {
+        turn_on_service.pop().data[ATTR_ENTITY_ID],
+        turn_on_service.pop().data[ATTR_ENTITY_ID]
+    } == {'light.light_1', 'light.light_2'}
+
+    assert len(turn_on_service) == 0
 
 
 async def test_redshift_handle_again_non_ignored(

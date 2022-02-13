@@ -30,13 +30,13 @@ from .const import (
 @pytest.fixture
 async def lights(hass):
     """Provide lights 'light.light_1' and 'light.light_2'."""
-    await make_lights(hass, ['light_1', 'light_2'])
+    await make_lights(hass, ['light_1', 'light_2'], area_name="area_1")
 
 
 @pytest.fixture
 async def more_lights(hass, lights):
     """Provide lights 'light.light_3' and 'light.light_4'."""
-    await make_lights(hass, ['light_3', 'light_4'])
+    await make_lights(hass, ['light_3', 'light_4'], area_name="area_2")
 
 
 @pytest.fixture

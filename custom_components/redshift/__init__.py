@@ -9,6 +9,7 @@ from homeassistant.helpers import entity_registry
 from homeassistant.const import (
     STATE_ON,
     SERVICE_TURN_ON,
+    ATTR_AREA_ID,
     ATTR_ENTITY_ID,
     ATTR_DEVICE_ID
 )
@@ -92,21 +93,26 @@ async def async_setup(hass, config):
             await maybe_apply_new_color_temp(lgt, current_state)
 
     def dont_touch(event):
-        for entry in entities_from_device_id(event):
-            lights_not_to_touch.add(entry.entity_id)
-        for entity_id in event.data.get(ATTR_ENTITY_ID, []):
+        for entity_id in entities_ids_from_event(event):
             lights_not_to_touch.add(entity_id)
 
     def handle_again(event):
-        for entry in entities_from_device_id(event):
-            lights_not_to_touch.remove(entry.entity_id)
-        for entity_id in event.data.get(ATTR_ENTITY_ID, []):
+        for entity_id in entities_ids_from_event(event):
             lights_not_to_touch.remove(entity_id)
 
-    def entities_from_device_id(event):
+    def entities_ids_from_event(event):
         entity_reg = entity_registry.async_get(hass)
+
         device_id = event.data.get(ATTR_DEVICE_ID)
-        return entity_registry.async_entries_for_device(entity_reg, device_id)
+        for entry in entity_registry.async_entries_for_device(entity_reg, device_id):
+            yield entry.entity_id
+
+        area_id = event.data.get(ATTR_AREA_ID)
+        for entry in entity_registry.async_entries_for_area(entity_reg, area_id):
+            yield entry.entity_id
+
+        for entity_id in event.data.get(ATTR_ENTITY_ID, []):
+            yield entity_id
 
     async def deactivate(event):
         nonlocal manual_color_temp
