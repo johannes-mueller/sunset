@@ -107,12 +107,14 @@ async def async_setup(hass, config):
         entity_reg = entity_registry.async_get(hass)
 
         device_id = event.data.get(ATTR_DEVICE_ID)
-        for entry in entity_registry.async_entries_for_device(entity_reg, device_id):
-            yield entry.entity_id
+        if device_id is not None:
+            for entry in entity_registry.async_entries_for_device(entity_reg, device_id):
+                yield entry.entity_id
 
         area_id = event.data.get(ATTR_AREA_ID)
-        for entry in entity_registry.async_entries_for_area(entity_reg, area_id):
-            yield entry.entity_id
+        if area_id is not None:
+            for entry in entity_registry.async_entries_for_area(entity_reg, area_id):
+                yield entry.entity_id
 
         entity_ids = event.data.get(ATTR_ENTITY_ID, [])
         if isinstance(entity_ids, str):
