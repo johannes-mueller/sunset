@@ -558,6 +558,66 @@ async def test_redshift_dont_touch(
     assert len(turn_on_service) == 1
 
 
+async def test_redshift_handle_again_key_error(
+        hass,
+        caplog
+):
+    assert await async_setup(hass, {DOMAIN: {}})
+
+    await hass.services.async_call('redshift', 'handle_again', {ATTR_ENTITY_ID: ['some_stupidity']})
+    await hass.async_block_till_done()
+
+    assert not any(r.levelname == 'ERROR' for r in caplog.records)
+    assert sum(1 for r in caplog.records if r.levelname == 'WARNING') == 1
+    assert any(
+        r.levelname == 'WARNING' and r.message == "Unknown entity_id: some_stupidity"
+        for r in caplog.records
+    )
+
+    caplog.clear()
+
+    assert not any(r.levelname == 'ERROR' for r in caplog.records)
+    await hass.services.async_call('redshift', 'handle_again', {ATTR_ENTITY_ID: ['another_stupidity']})
+    await hass.async_block_till_done()
+
+    assert sum(1 for r in caplog.records if r.levelname == 'WARNING') == 1
+    assert any(
+        r.levelname == 'WARNING' and r.message == "Unknown entity_id: another_stupidity"
+        for r in caplog.records
+    )
+
+
+async def test_redshift_handle_again_no_key_error(
+        hass,
+        caplog
+):
+    assert await async_setup(hass, {DOMAIN: {}})
+
+    await hass.services.async_call('redshift', 'dont_touch', {ATTR_ENTITY_ID: ['some_stupidity']})
+    await hass.async_block_till_done()
+    await hass.services.async_call('redshift', 'handle_again', {ATTR_ENTITY_ID: ['some_stupidity']})
+    await hass.async_block_till_done()
+
+    assert not any(r.levelname == 'ERROR' for r in caplog.records)
+    assert not any(
+        r.levelname == 'WARNING' and r.message == "Unknown entity_id: some_stupidity"
+        for r in caplog.records
+    )
+
+
+async def test_redshift_dont_touch_entity_id_not_as_list(
+        hass,
+        caplog
+):
+    assert await async_setup(hass, {DOMAIN: {}})
+    await hass.services.async_call('redshift', 'dont_touch', {ATTR_ENTITY_ID: 'some_stupidity'})
+    await hass.services.async_call('redshift', 'handle_again', {ATTR_ENTITY_ID: 'some_stupidity'})
+
+    await hass.async_block_till_done()
+
+    assert not any(r.levelname == 'WARNING' for r in caplog.records)
+
+
 async def test_redshift_dont_touch_devices(
         hass,
         lights,
@@ -675,16 +735,6 @@ async def test_redshift_dont_touch_areas(
     } == {'light.light_1', 'light.light_2'}
 
     assert len(turn_on_service) == 0
-
-
-async def test_redshift_handle_again_non_ignored(
-        hass,
-        lights,
-        turn_on_service,
-        start_at_noon
-):
-    assert await async_setup(hass, {DOMAIN: {}})
-    await hass.services.async_call('redshift', 'handle_again', {ATTR_ENTITY_ID: 'light.light_2'})
 
 
 async def test_redshift_deactivate_with_color_temp(

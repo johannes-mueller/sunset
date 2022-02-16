@@ -98,6 +98,9 @@ async def async_setup(hass, config):
 
     def handle_again(event):
         for entity_id in entities_ids_from_event(event):
+            if entity_id not in lights_not_to_touch:
+                _LOGGER.warning("Unknown entity_id: %s" % entity_id)
+                continue
             lights_not_to_touch.remove(entity_id)
 
     def entities_ids_from_event(event):
@@ -111,7 +114,11 @@ async def async_setup(hass, config):
         for entry in entity_registry.async_entries_for_area(entity_reg, area_id):
             yield entry.entity_id
 
-        for entity_id in event.data.get(ATTR_ENTITY_ID, []):
+        entity_ids = event.data.get(ATTR_ENTITY_ID, [])
+        if isinstance(entity_ids, str):
+            entity_ids = [entity_ids]
+
+        for entity_id in entity_ids:
             yield entity_id
 
     async def deactivate(event):
