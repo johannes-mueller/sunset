@@ -16,7 +16,7 @@ from homeassistant.const import (
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_COLOR_MODE,
     ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_MAX_COLOR_TEMP_KELVIN,
@@ -58,7 +58,7 @@ async def turn_on_lights(hass, lights, color_temp=None):
             attrs = bw_attrs
         else:
             attrs = color_temp_attrs
-            attrs[ATTR_COLOR_TEMP] = color_temp
+            attrs[ATTR_COLOR_TEMP_KELVIN] = color_temp
 
         hass.states.async_set('light.'+lgt, STATE_ON, attrs)
 
@@ -107,4 +107,4 @@ def async_fire_time_changed_now_time(hass):
 def _color_temp_of_state(state):
     if state is None:
         return None
-    return state.attributes.get(ATTR_COLOR_TEMP)
+    return state.attributes.get(ATTR_COLOR_TEMP_KELVIN)

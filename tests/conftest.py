@@ -14,7 +14,7 @@ from homeassistant.const import (
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_COLOR_MODE,
     ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_MAX_COLOR_TEMP_KELVIN,
@@ -60,11 +60,11 @@ async def turn_on_service(hass):
         """Mock service call."""
         entity = call.data[ATTR_ENTITY_ID]
 
-        color_temp = min(MAX_COLOR_TEMP_KELVIN, max(MIN_COLOR_TEMP_KELVIN, round(call.data.get(ATTR_COLOR_TEMP))))
+        color_temp = min(MAX_COLOR_TEMP_KELVIN, max(MIN_COLOR_TEMP_KELVIN, round(call.data.get(ATTR_COLOR_TEMP_KELVIN))))
 
         color_tmp_attrs = {
             ATTR_COLOR_MODE: COLOR_MODE_COLOR_TEMP,
-            ATTR_COLOR_TEMP: color_temp,
+            ATTR_COLOR_TEMP_KELVIN: color_temp,
             ATTR_MIN_COLOR_TEMP_KELVIN: MIN_COLOR_TEMP_KELVIN,
             ATTR_MAX_COLOR_TEMP_KELVIN: MAX_COLOR_TEMP_KELVIN
         }

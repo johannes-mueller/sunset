@@ -16,7 +16,7 @@ from homeassistant.const import (
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_COLOR_MODE,
     ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_MAX_COLOR_TEMP_KELVIN,
@@ -59,7 +59,7 @@ async def async_setup(hass, config):
 
         _LOGGER.debug("%s -> %s", lgt, color_temp)
 
-        attrs = {ATTR_ENTITY_ID: lgt, ATTR_COLOR_TEMP: color_temp}
+        attrs = {ATTR_ENTITY_ID: lgt, ATTR_COLOR_TEMP_KELVIN: color_temp}
         known_states[lgt] = HA.State(lgt, STATE_ON, attrs)
         await hass.services.async_call('light', SERVICE_TURN_ON, attrs)
 
@@ -190,4 +190,4 @@ async def async_setup(hass, config):
 def _color_temp_of_state(state):
     if state is None:
         return None
-    return state.attributes.get(ATTR_COLOR_TEMP)
+    return state.attributes.get(ATTR_COLOR_TEMP_KELVIN)
