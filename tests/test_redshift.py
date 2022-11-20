@@ -18,7 +18,7 @@ from homeassistant.helpers import device_registry, entity_registry
 
 from .const import (
     DOMAIN,
-    MINMAX_MIREDS
+    MINMAX_COLOR_TEMP_KELVIN
 )
 
 from .common import (
@@ -120,7 +120,7 @@ async def test_light_goes_on_while_inactive(
 
     hass.states.async_set('redshift.active', False)
 
-    hass.states.async_set('light.light_1', STATE_OFF, attributes=MINMAX_MIREDS)
+    hass.states.async_set('light.light_1', STATE_OFF, attributes=MINMAX_COLOR_TEMP_KELVIN)
 
     start_at_noon.move_to(some_evening_time())
     async_fire_time_changed_now_time(hass)
@@ -129,7 +129,7 @@ async def test_light_goes_on_while_inactive(
     assert len(turn_on_service) == 0
 
     attrs = {ATTR_COLOR_TEMP: 390}
-    attrs.update(MINMAX_MIREDS)
+    attrs.update(MINMAX_COLOR_TEMP_KELVIN)
     hass.states.async_set('light.light_1', STATE_ON, attrs)
 
     start_at_noon.tick(600)
@@ -255,7 +255,7 @@ async def test_service_turn_on_call_four_lights_3_manually_set_color_temp(
 
     turn_on_service.pop()
 
-    hass.states.async_set('light.light_3', STATE_OFF, attributes=MINMAX_MIREDS)
+    hass.states.async_set('light.light_3', STATE_OFF, attributes=MINMAX_COLOR_TEMP_KELVIN)
     start_at_noon.tick(600)
     async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
@@ -292,7 +292,7 @@ async def test_redshift_day_to_night(
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 1
-    assert turn_on_service[0].data[ATTR_COLOR_TEMP] == 400
+    assert turn_on_service[0].data[ATTR_COLOR_TEMP] == 2500
 
 
 async def test_redshift_night_to_day(
@@ -311,7 +311,7 @@ async def test_redshift_night_to_day(
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 1
-    assert turn_on_service[0].data[ATTR_COLOR_TEMP] == 160
+    assert turn_on_service[0].data[ATTR_COLOR_TEMP] == 6250
 
 
 async def test_redshift_day_to_night_non_default_night_color_temp(
@@ -330,7 +330,7 @@ async def test_redshift_day_to_night_non_default_night_color_temp(
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 1
-    assert turn_on_service[0].data[ATTR_COLOR_TEMP] == 389
+    assert turn_on_service[0].data[ATTR_COLOR_TEMP] == 2571
 
 
 async def test_redshift_night_to_day_non_default_day_color_temp(
@@ -350,7 +350,7 @@ async def test_redshift_night_to_day_non_default_day_color_temp(
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 1
-    assert turn_on_service[0].data[ATTR_COLOR_TEMP] == 200
+    assert turn_on_service[0].data[ATTR_COLOR_TEMP] == 5000
 
 
 async def test_redshift_to_evening(
@@ -369,7 +369,7 @@ async def test_redshift_to_evening(
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 1
-    assert turn_on_service[0].data[ATTR_COLOR_TEMP] == 280
+    assert turn_on_service[0].data[ATTR_COLOR_TEMP] == 4375
 
 
 async def test_redshift_to_evening_non_default_evening_range(
@@ -391,13 +391,13 @@ async def test_redshift_to_evening_non_default_evening_range(
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 1
-    assert turn_on_service[0].data[ATTR_COLOR_TEMP] == 240
+    assert turn_on_service[0].data[ATTR_COLOR_TEMP] == 5000
 
 
 @pytest.mark.parametrize('morning_time, expected_color_temps', [
-    ("05:00", [400, 160, 160]),
-    ("06:00", [400, 400, 160]),
-    ("07:00", [400, 400, 400]),
+    ("05:00", [2500, 6250, 6250]),
+    ("06:00", [2500, 2500, 6250]),
+    ("07:00", [2500, 2500, 2500]),
 ])
 async def test_redshift_night_to_day_non_default_morning_time(
         morning_time,
@@ -440,7 +440,7 @@ async def test_redshift_during_evening_rounding_error(
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 1
-    assert turn_on_service.pop().data[ATTR_COLOR_TEMP] == 280
+    assert turn_on_service.pop().data[ATTR_COLOR_TEMP] == 4375
 
     for i in range(10):
         start_at_noon.tick(120.0)
@@ -451,7 +451,7 @@ async def test_redshift_during_evening_rounding_error(
         turn_on_service.pop()
 
 
-async def test_redshift_day_to_night_exceed_mired(
+async def test_redshift_day_to_night_exceed_color_temp_kelvin(
         hass,
         lights,
         turn_on_service,
@@ -467,10 +467,10 @@ async def test_redshift_day_to_night_exceed_mired(
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 1
-    assert turn_on_service[0].data[ATTR_COLOR_TEMP] == 400
+    assert turn_on_service[0].data[ATTR_COLOR_TEMP] == 2500
 
 
-async def test_redshift_night_to_day_exceed_mired(
+async def test_redshift_night_to_day_exceed_color_temp_kelvin(
         hass,
         lights,
         turn_on_service,
@@ -487,7 +487,7 @@ async def test_redshift_night_to_day_exceed_mired(
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 1
-    assert turn_on_service[0].data[ATTR_COLOR_TEMP] == 160
+    assert turn_on_service[0].data[ATTR_COLOR_TEMP] == 6250
 
 
 
@@ -751,8 +751,8 @@ async def test_redshift_deactivate_with_color_temp(
 
     assert hass.states.get('redshift.active').state == 'False'
 
-    assert turn_on_service.pop().data[ATTR_COLOR_TEMP] == 389
-    assert turn_on_service.pop().data[ATTR_COLOR_TEMP] == 389
+    assert turn_on_service.pop().data[ATTR_COLOR_TEMP] == 2571
+    assert turn_on_service.pop().data[ATTR_COLOR_TEMP] == 2571
 
     start_at_noon.tick(600)
     async_fire_time_changed_now_time(hass)
@@ -796,5 +796,5 @@ async def test_redshift_go_redshift(
 
     assert hass.states.get('redshift.active').state == 'True'
 
-    assert turn_on_service.pop().data[ATTR_COLOR_TEMP] == 160
-    assert turn_on_service.pop().data[ATTR_COLOR_TEMP] == 160
+    assert turn_on_service.pop().data[ATTR_COLOR_TEMP] == 6250
+    assert turn_on_service.pop().data[ATTR_COLOR_TEMP] == 6250

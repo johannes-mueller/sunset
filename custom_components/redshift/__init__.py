@@ -41,9 +41,9 @@ async def async_setup(hass, config):
         return manual_color_temp or round(redshift_calculator.color_temp())
 
     def color_temp_in_limits(lgt):
-        min_mired = hass.states.get(lgt).attributes['min_mireds']
-        max_mired = hass.states.get(lgt).attributes['max_mireds']
-        return min(max_mired, max(min_mired, current_target_color_temp()))
+        min_color_temp_kelvin = hass.states.get(lgt).attributes['min_color_temp_kelvin']
+        max_color_temp_kelvin = hass.states.get(lgt).attributes['max_color_temp_kelvin']
+        return min(max_color_temp_kelvin, max(min_color_temp_kelvin, current_target_color_temp()))
 
     async def apply_new_color_temp(lgt):
         color_temp = color_temp_in_limits(lgt)
@@ -128,7 +128,6 @@ async def async_setup(hass, config):
         manual_color_temp = event.data.get('color_temp')
 
         if manual_color_temp is not None:
-            manual_color_temp = round(_kelvin_to_mired(manual_color_temp))
             await timer_event(None)
 
         hass.states.async_set(DOMAIN+'.active', False)
@@ -155,8 +154,8 @@ async def async_setup(hass, config):
             final_config['evening_time'],
             final_config['night_time'],
             final_config['morning_time'],
-            _kelvin_to_mired(final_config['day_color_temp']),
-            _kelvin_to_mired(final_config['night_color_temp']),
+            final_config['day_color_temp'],
+            final_config['night_color_temp'],
         )
 
     final_config = finalized_config()
@@ -178,10 +177,6 @@ async def async_setup(hass, config):
     EV.async_track_time_interval(hass, timer_event, DT.timedelta(seconds=1))
 
     return True
-
-
-def _kelvin_to_mired(kelvin):
-    return 1e6/kelvin
 
 
 def _color_temp_of_state(state):

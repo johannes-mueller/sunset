@@ -22,8 +22,8 @@ from .common import (
     make_lights,
 )
 from .const import (
-    MIN_MIRED,
-    MAX_MIRED,
+    MIN_COLOR_TEMP_KELVIN,
+    MAX_COLOR_TEMP_KELVIN,
 )
 
 
@@ -49,12 +49,12 @@ async def turn_on_service(hass):
         """Mock service call."""
         entity = call.data[ATTR_ENTITY_ID]
 
-        color_temp = min(MAX_MIRED, max(MIN_MIRED, round(call.data.get(ATTR_COLOR_TEMP))))
+        color_temp = min(MAX_COLOR_TEMP_KELVIN, max(MIN_COLOR_TEMP_KELVIN, round(call.data.get(ATTR_COLOR_TEMP))))
 
         attrs = {
             ATTR_COLOR_TEMP: color_temp,
-            'min_mireds': MIN_MIRED,
-            'max_mireds': MAX_MIRED
+            'min_color_temp_kelvin': MIN_COLOR_TEMP_KELVIN,
+            'max_color_temp_kelvin': MAX_COLOR_TEMP_KELVIN
         }
         hass.states.async_set(entity, STATE_ON, attrs)
 

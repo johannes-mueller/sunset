@@ -9,8 +9,8 @@ class RedshiftCalculator:
             evening_time="17:00",
             night_time="23:00",
             morning_time="07:00",
-            day_color_temp=200,
-            night_color_temp=600
+            day_color_temp=6250,
+            night_color_temp=2500
     ):
         self._day_color_temp = day_color_temp
         self._night_color_temp = night_color_temp
@@ -37,7 +37,8 @@ class RedshiftCalculator:
 
         color_range = self._night_color_temp - self._day_color_temp
 
-        return self._day_color_temp + color_range / evening_time_span * elapsed_seconds
+        color = self._day_color_temp + color_range / evening_time_span * elapsed_seconds
+        return round(color)
 
     def _evening(self):
         return self._time_corrected(self._evening_time)

@@ -27,9 +27,9 @@ from homeassistant.helpers import entity_registry
 
 
 from .const import (
-    MIN_MIRED,
-    MAX_MIRED,
-    MINMAX_MIREDS
+    MIN_COLOR_TEMP_KELVIN,
+    MAX_COLOR_TEMP_KELVIN,
+    MINMAX_COLOR_TEMP_KELVIN
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,12 +38,12 @@ _LOGGER = logging.getLogger(__name__)
 async def turn_on_lights(hass, lights, color_temp=None):
     """Turn on `lights`."""
     attrs = {
-        'min_mireds': MIN_MIRED,
-        'max_mireds': MAX_MIRED
+        'min_color_temp_kelvin': MIN_COLOR_TEMP_KELVIN,
+        'max_color_temp_kelvin': MAX_COLOR_TEMP_KELVIN
     }
     for lgt in lights:
         state = hass.states.get(lgt)
-        color_temp = color_temp or _color_temp_of_state(state) or 380
+        color_temp = color_temp or _color_temp_of_state(state) or 2630
         attrs[ATTR_COLOR_TEMP] = color_temp
 
         hass.states.async_set('light.'+lgt, STATE_ON, attrs)
@@ -58,12 +58,13 @@ async def make_lights(hass, lights, area_name):
     ])
 
     for lgt in lights:
-        hass.states.async_set('light.'+lgt, STATE_OFF, attributes=MINMAX_MIREDS)
+        hass.states.async_set('light.'+lgt, STATE_OFF, attributes=MINMAX_COLOR_TEMP_KELVIN)
 
 
 def _make_light(hass, light, area_id):
     entity_reg = entity_registry.async_get(hass)
-    entity_reg.async_get_or_create('light', '', light, device_id='device_id_'+light, area_id=area_id)
+    entity_entry = entity_reg.async_get_or_create('light', '', light, device_id='device_id_'+light)
+    entity_reg.async_update_entity(entity_entry.entity_id, area_id=area_id)
     return MockEntity(entity_id='light.'+light, device_id='device_id_'+light, area_id=area_id)
 
 
