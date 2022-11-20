@@ -16,7 +16,12 @@ from homeassistant.const import (
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP
+    ATTR_COLOR_TEMP,
+    ATTR_COLOR_MODE,
+    ATTR_MIN_COLOR_TEMP_KELVIN,
+    ATTR_MAX_COLOR_TEMP_KELVIN,
+    COLOR_MODE_COLOR_TEMP,
+    COLOR_MODE_ONOFF,
 )
 
 from homeassistant.helpers.entity_component import (
@@ -37,14 +42,23 @@ _LOGGER = logging.getLogger(__name__)
 
 async def turn_on_lights(hass, lights, color_temp=None):
     """Turn on `lights`."""
-    attrs = {
-        'min_color_temp_kelvin': MIN_COLOR_TEMP_KELVIN,
-        'max_color_temp_kelvin': MAX_COLOR_TEMP_KELVIN
+    color_temp_attrs = {
+        ATTR_COLOR_MODE: COLOR_MODE_COLOR_TEMP,
+        ATTR_MIN_COLOR_TEMP_KELVIN: MIN_COLOR_TEMP_KELVIN,
+        ATTR_MAX_COLOR_TEMP_KELVIN: MAX_COLOR_TEMP_KELVIN
+    }
+    bw_attrs = {
+        ATTR_COLOR_MODE: COLOR_MODE_ONOFF,
     }
     for lgt in lights:
         state = hass.states.get(lgt)
         color_temp = color_temp or _color_temp_of_state(state) or 2630
-        attrs[ATTR_COLOR_TEMP] = color_temp
+
+        if lgt.startswith('bw'):
+            attrs = bw_attrs
+        else:
+            attrs = color_temp_attrs
+            attrs[ATTR_COLOR_TEMP] = color_temp
 
         hass.states.async_set('light.'+lgt, STATE_ON, attrs)
 

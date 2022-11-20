@@ -15,6 +15,11 @@ from homeassistant.const import (
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
+    ATTR_COLOR_MODE,
+    ATTR_MIN_COLOR_TEMP_KELVIN,
+    ATTR_MAX_COLOR_TEMP_KELVIN,
+    COLOR_MODE_COLOR_TEMP,
+    COLOR_MODE_ONOFF
 )
 
 
@@ -39,6 +44,12 @@ async def more_lights(hass, lights):
     await make_lights(hass, ['light_3', 'light_4'], area_name="area_2")
 
 
+
+@pytest.fixture
+async def bw_light(hass):
+    await make_lights(hass, ['bwlight_1'], area_name="foo_area")
+
+
 @pytest.fixture
 async def turn_on_service(hass):
     """Mock SERVICE_TURN_ON for lights."""
@@ -51,11 +62,18 @@ async def turn_on_service(hass):
 
         color_temp = min(MAX_COLOR_TEMP_KELVIN, max(MIN_COLOR_TEMP_KELVIN, round(call.data.get(ATTR_COLOR_TEMP))))
 
-        attrs = {
+        color_tmp_attrs = {
+            ATTR_COLOR_MODE: COLOR_MODE_COLOR_TEMP,
             ATTR_COLOR_TEMP: color_temp,
-            'min_color_temp_kelvin': MIN_COLOR_TEMP_KELVIN,
-            'max_color_temp_kelvin': MAX_COLOR_TEMP_KELVIN
+            ATTR_MIN_COLOR_TEMP_KELVIN: MIN_COLOR_TEMP_KELVIN,
+            ATTR_MAX_COLOR_TEMP_KELVIN: MAX_COLOR_TEMP_KELVIN
         }
+
+        bw_attrs = {
+            ATTR_COLOR_MODE: COLOR_MODE_ONOFF
+        }
+
+        attrs = bw_attrs if entity.startswith('light.bw') else color_tmp_attrs
         hass.states.async_set(entity, STATE_ON, attrs)
 
         calls.append(call)

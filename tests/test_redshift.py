@@ -11,7 +11,9 @@ from homeassistant.const import (
 )
 
 from homeassistant.components.light import (
-    ATTR_COLOR_TEMP
+    ATTR_COLOR_MODE,
+    ATTR_COLOR_TEMP,
+    COLOR_MODE_COLOR_TEMP
 )
 
 from homeassistant.helpers import device_registry, entity_registry
@@ -128,7 +130,7 @@ async def test_light_goes_on_while_inactive(
 
     assert len(turn_on_service) == 0
 
-    attrs = {ATTR_COLOR_TEMP: 390}
+    attrs = {ATTR_COLOR_TEMP: 390, ATTR_COLOR_MODE: COLOR_MODE_COLOR_TEMP}
     attrs.update(MINMAX_COLOR_TEMP_KELVIN)
     hass.states.async_set('light.light_1', STATE_ON, attrs)
 
@@ -244,7 +246,8 @@ async def test_service_turn_on_call_four_lights_3_manually_set_color_temp(
     turn_on_service.pop()
     turn_on_service.pop()
 
-    hass.states.async_set('light.light_3', STATE_ON, attributes={ATTR_COLOR_TEMP: 390})
+    attrs = {ATTR_COLOR_TEMP: 390, ATTR_COLOR_MODE: COLOR_MODE_COLOR_TEMP}
+    hass.states.async_set('light.light_3', STATE_ON, attributes=attrs)
     start_at_noon.tick(600)
     async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
@@ -312,6 +315,24 @@ async def test_redshift_night_to_day(
 
     assert len(turn_on_service) == 1
     assert turn_on_service[0].data[ATTR_COLOR_TEMP] == 6250
+
+
+async def test_redshift_bwlight(
+        hass,
+        bw_light,
+        turn_on_service,
+        start_at_noon
+):
+    assert await async_setup(hass, {DOMAIN: {}})
+
+    await turn_on_lights(hass, ['bwlight_1'])
+
+    start_at_noon.move_to(some_evening_time())
+    async_fire_time_changed_now_time(hass)
+
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 0
 
 
 async def test_redshift_day_to_night_non_default_night_color_temp(

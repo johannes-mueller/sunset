@@ -11,12 +11,17 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     ATTR_AREA_ID,
     ATTR_ENTITY_ID,
-    ATTR_DEVICE_ID
+    ATTR_DEVICE_ID,
 )
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP
+    ATTR_COLOR_TEMP,
+    ATTR_COLOR_MODE,
+    ATTR_MIN_COLOR_TEMP_KELVIN,
+    ATTR_MAX_COLOR_TEMP_KELVIN,
+    COLOR_MODE_COLOR_TEMP,
+    COLOR_MODE_ONOFF
 )
 
 from .calculator import RedshiftCalculator
@@ -41,8 +46,8 @@ async def async_setup(hass, config):
         return manual_color_temp or round(redshift_calculator.color_temp())
 
     def color_temp_in_limits(lgt):
-        min_color_temp_kelvin = hass.states.get(lgt).attributes['min_color_temp_kelvin']
-        max_color_temp_kelvin = hass.states.get(lgt).attributes['max_color_temp_kelvin']
+        min_color_temp_kelvin = hass.states.get(lgt).attributes[ATTR_MIN_COLOR_TEMP_KELVIN]
+        max_color_temp_kelvin = hass.states.get(lgt).attributes[ATTR_MAX_COLOR_TEMP_KELVIN]
         return min(max_color_temp_kelvin, max(min_color_temp_kelvin, current_target_color_temp()))
 
     async def apply_new_color_temp(lgt):
@@ -63,8 +68,11 @@ async def async_setup(hass, config):
             filter(lambda x: x[0] in current_states.keys(), known_states.items())
         )
 
+    def is_not_color_temp_light(lgt):
+        return hass.states.get(lgt).attributes[ATTR_COLOR_MODE] != COLOR_MODE_COLOR_TEMP
+
     async def maybe_apply_new_color_temp(lgt, current_state):
-        if lgt in lights_not_to_touch:
+        if lgt in lights_not_to_touch or is_not_color_temp_light(lgt):
             return
 
         known_state = known_states.get(lgt)
