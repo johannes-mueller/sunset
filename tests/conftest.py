@@ -62,9 +62,11 @@ async def turn_on_service(hass):
 
         color_temp = min(MAX_COLOR_TEMP_KELVIN, max(MIN_COLOR_TEMP_KELVIN, round(call.data.get(ATTR_COLOR_TEMP_KELVIN))))
 
+        actual_color_temp = int(1e6/int(1e6/color_temp))
+
         color_tmp_attrs = {
             ATTR_COLOR_MODE: COLOR_MODE_COLOR_TEMP,
-            ATTR_COLOR_TEMP_KELVIN: color_temp,
+            ATTR_COLOR_TEMP_KELVIN: actual_color_temp,
             ATTR_MIN_COLOR_TEMP_KELVIN: MIN_COLOR_TEMP_KELVIN,
             ATTR_MAX_COLOR_TEMP_KELVIN: MAX_COLOR_TEMP_KELVIN
         }

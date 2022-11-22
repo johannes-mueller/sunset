@@ -67,6 +67,26 @@ async def test_service_turn_on_call_two_lights_two_on(
     assert len(turn_on_service) == 2
 
 
+async def test_service_catch_rounding_error(
+        hass, lights, turn_on_service, start_at_noon
+):
+    assert await async_setup(hass, {DOMAIN: {}})
+
+    await turn_on_lights(hass, ['light_1'])
+
+    start_at_noon.move_to(some_evening_time())
+    async_fire_time_changed_now_time(hass)
+    await hass.async_block_till_done()
+
+    turn_on_service.pop()
+
+    start_at_noon.tick(5)
+    async_fire_time_changed_now_time(hass)
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 0
+
+
 async def test_service_active_inactive(
         hass,
         lights,

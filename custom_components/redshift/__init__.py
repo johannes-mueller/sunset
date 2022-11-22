@@ -52,9 +52,9 @@ async def async_setup(hass, config):
 
     async def apply_new_color_temp(lgt):
         color_temp = color_temp_in_limits(lgt)
-        current_color_temp = _color_temp_of_state(hass.states.get(lgt))
+        current_color_temp_mired = _color_temp_mired_of_state(hass.states.get(lgt))
 
-        if color_temp == current_color_temp:
+        if int(1e6/color_temp) == current_color_temp_mired:
             return
 
         _LOGGER.debug("%s -> %s", lgt, color_temp)
@@ -76,8 +76,8 @@ async def async_setup(hass, config):
             return
 
         known_state = known_states.get(lgt)
-        known_color_temp = _color_temp_of_state(known_state)
-        current_color_temp = _color_temp_of_state(current_state)
+        known_color_temp = _color_temp_mired_of_state(known_state)
+        current_color_temp = _color_temp_mired_of_state(current_state)
 
         light_just_went_on = known_state is None
         nobody_changed_color_temp_since_last_time = known_color_temp == current_color_temp
@@ -187,7 +187,7 @@ async def async_setup(hass, config):
     return True
 
 
-def _color_temp_of_state(state):
+def _color_temp_mired_of_state(state):
     if state is None:
         return None
-    return state.attributes.get(ATTR_COLOR_TEMP_KELVIN)
+    return int(1e6/state.attributes.get(ATTR_COLOR_TEMP_KELVIN))
