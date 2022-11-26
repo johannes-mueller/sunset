@@ -11,7 +11,7 @@ from homeassistant.const import (
 )
 
 from homeassistant.components.light import (
-    ATTR_COLOR_MODE,
+    ATTR_SUPPORTED_COLOR_MODES,
     ATTR_COLOR_TEMP_KELVIN,
     COLOR_MODE_COLOR_TEMP
 )
@@ -150,7 +150,7 @@ async def test_light_goes_on_while_inactive(
 
     assert len(turn_on_service) == 0
 
-    attrs = {ATTR_COLOR_TEMP_KELVIN: 390, ATTR_COLOR_MODE: COLOR_MODE_COLOR_TEMP}
+    attrs = {ATTR_COLOR_TEMP_KELVIN: 390, ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_COLOR_TEMP]}
     attrs.update(MINMAX_COLOR_TEMP_KELVIN)
     hass.states.async_set('light.light_1', STATE_ON, attrs)
 
@@ -266,7 +266,7 @@ async def test_service_turn_on_call_four_lights_3_manually_set_color_temp(
     turn_on_service.pop()
     turn_on_service.pop()
 
-    attrs = {ATTR_COLOR_TEMP_KELVIN: 390, ATTR_COLOR_MODE: COLOR_MODE_COLOR_TEMP}
+    attrs = {ATTR_COLOR_TEMP_KELVIN: 390, ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_COLOR_TEMP]}
     hass.states.async_set('light.light_3', STATE_ON, attributes=attrs)
     start_at_noon.tick(600)
     async_fire_time_changed_now_time(hass)

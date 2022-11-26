@@ -17,11 +17,10 @@ from homeassistant.const import (
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
-    ATTR_COLOR_MODE,
+    ATTR_SUPPORTED_COLOR_MODES,
     ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_MAX_COLOR_TEMP_KELVIN,
     COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_ONOFF
 )
 
 from .calculator import RedshiftCalculator
@@ -69,7 +68,7 @@ async def async_setup(hass, config):
         )
 
     def is_not_color_temp_light(lgt):
-        return hass.states.get(lgt).attributes[ATTR_COLOR_MODE] != COLOR_MODE_COLOR_TEMP
+        return COLOR_MODE_COLOR_TEMP not in hass.states.get(lgt).attributes[ATTR_SUPPORTED_COLOR_MODES]
 
     async def maybe_apply_new_color_temp(lgt, current_state):
         if lgt in lights_not_to_touch or is_not_color_temp_light(lgt):

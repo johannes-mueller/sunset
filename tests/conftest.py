@@ -15,11 +15,12 @@ from homeassistant.const import (
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
-    ATTR_COLOR_MODE,
+    ATTR_SUPPORTED_COLOR_MODES,
     ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_MAX_COLOR_TEMP_KELVIN,
     COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_ONOFF
+    COLOR_MODE_ONOFF,
+    COLOR_MODE_XY
 )
 
 
@@ -65,14 +66,14 @@ async def turn_on_service(hass):
         actual_color_temp = int(1e6/int(1e6/color_temp))
 
         color_tmp_attrs = {
-            ATTR_COLOR_MODE: COLOR_MODE_COLOR_TEMP,
+            ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_COLOR_TEMP, COLOR_MODE_XY],
             ATTR_COLOR_TEMP_KELVIN: actual_color_temp,
             ATTR_MIN_COLOR_TEMP_KELVIN: MIN_COLOR_TEMP_KELVIN,
             ATTR_MAX_COLOR_TEMP_KELVIN: MAX_COLOR_TEMP_KELVIN
         }
 
         bw_attrs = {
-            ATTR_COLOR_MODE: COLOR_MODE_ONOFF
+            ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_ONOFF],
         }
 
         attrs = bw_attrs if entity.startswith('light.bw') else color_tmp_attrs
