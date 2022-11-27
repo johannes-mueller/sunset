@@ -189,4 +189,7 @@ async def async_setup(hass, config):
 def _color_temp_mired_of_state(state):
     if state is None:
         return None
-    return int(1e6/state.attributes.get(ATTR_COLOR_TEMP_KELVIN))
+    color_temp = state.attributes.get(ATTR_COLOR_TEMP_KELVIN)
+    if color_temp is None:
+        return
+    return int(1e6/color_temp)

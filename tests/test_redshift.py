@@ -12,6 +12,7 @@ from homeassistant.const import (
 
 from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
+    ATTR_COLOR_NAME,
     ATTR_COLOR_TEMP_KELVIN,
     COLOR_MODE_COLOR_TEMP
 )
@@ -353,6 +354,26 @@ async def test_redshift_bwlight(
     await hass.async_block_till_done()
 
     assert len(turn_on_service) == 0
+
+
+async def test_redshift_light_in_color(
+        hass,
+        bw_light,
+        turn_on_service,
+        start_at_noon
+):
+    assert await async_setup(hass, {DOMAIN: {}})
+
+    attrs = {ATTR_COLOR_NAME: "green", ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_COLOR_TEMP]}
+    attrs.update(MINMAX_COLOR_TEMP_KELVIN)
+    hass.states.async_set('light.light_1', STATE_ON, attrs)
+
+    start_at_noon.move_to(some_evening_time())
+    async_fire_time_changed_now_time(hass)
+
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 1
 
 
 async def test_redshift_day_to_night_non_default_night_color_temp(
