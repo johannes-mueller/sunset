@@ -52,7 +52,7 @@ async def bw_light(hass):
 
 
 @pytest.fixture
-async def turn_on_service(hass):
+def turn_on_service(hass):
     """Mock SERVICE_TURN_ON for lights."""
     calls = []
 
