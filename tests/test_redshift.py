@@ -916,3 +916,26 @@ async def test_redshift_go_redshift(
 
     assert turn_on_service.pop().data[ATTR_COLOR_TEMP_KELVIN] == 6250
     assert turn_on_service.pop().data[ATTR_COLOR_TEMP_KELVIN] == 6250
+
+
+async def test_redshift_only_relevant_attrs_in_call(
+        hass,
+        lights,
+        turn_on_service,
+        start_at_night
+):
+    assert await async_setup(hass, {DOMAIN: {}})
+
+    await turn_on_lights(hass, ['light_1'])
+
+    start_at_night.move_to(some_day_time())
+    async_fire_time_changed_now_time(hass)
+
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 1
+    assert set(turn_on_service[0].data.keys()) == {
+        ATTR_ENTITY_ID,
+        ATTR_COLOR_TEMP_KELVIN,
+        ATTR_BRIGHTNESS
+    }

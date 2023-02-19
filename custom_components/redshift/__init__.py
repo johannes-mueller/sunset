@@ -126,10 +126,17 @@ async def async_setup(hass, config):
 
         known_state = known_states.get(lgt)
 
-        attrs = new_color_temp_state(lgt, known_state, current_state) | new_brightness_state(lgt, known_state, current_state)
+        attrs = \
+            new_color_temp_state(lgt, known_state, current_state) | \
+            new_brightness_state(lgt, known_state, current_state)
 
         if attrs != dict():
-            call_attrs = {ATTR_ENTITY_ID: lgt} | current_state.attributes
+            current_attrs = current_state.attributes
+            call_attrs = {
+                key: current_attrs[key]
+                for key in [ATTR_BRIGHTNESS, ATTR_COLOR_TEMP_KELVIN]
+                if key in current_attrs
+            } | {ATTR_ENTITY_ID: lgt}
             call_attrs.update(attrs)
             known_states[lgt] = HA.State(lgt, STATE_ON, call_attrs)
             await hass.services.async_call('light', SERVICE_TURN_ON, call_attrs)
