@@ -1,10 +1,10 @@
 
-activate:
-  name: Activate
+activate_redshift:
+  name: Activate redshift
   description: Activates the redshift.
 
-deactivate:
-  name: Deactivate
+deactivate_redshift:
+  name: Deactivate redshift
   description: Deactivates the redshift optionally and sets all lights to a given temperature.
   fields:
     color_temp:
@@ -17,6 +17,24 @@ deactivate:
           max: 6500
           step: 100
           unit_of_measurement: K
+
+activate_brightness:
+  name: Activate brightness
+  description: Activates the brightness.
+
+deactivate_brightness:
+  name: Deactivate brightness
+  description: Deactivates the brightness optionally and sets all lights to a given brightness.
+  fields:
+    brightness:
+      name: Manual brightness
+      description: Brightness for the lights.
+      advanced: true
+      selector:
+        number:
+          min: 0
+          max: 255
+          step: 10
 
 dont_touch:
   name: Don't touch

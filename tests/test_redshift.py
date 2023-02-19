@@ -12,6 +12,7 @@ from homeassistant.const import (
 
 from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
+    ATTR_BRIGHTNESS,
     ATTR_COLOR_NAME,
     ATTR_COLOR_TEMP_KELVIN,
     COLOR_MODE_COLOR_TEMP
@@ -21,7 +22,9 @@ from homeassistant.helpers import device_registry, entity_registry
 
 from .const import (
     DOMAIN,
-    MINMAX_COLOR_TEMP_KELVIN
+    MINMAX_COLOR_TEMP_KELVIN,
+    MAX_COLOR_TEMP_KELVIN,
+    MIN_COLOR_TEMP_KELVIN
 )
 
 from .common import (
@@ -106,7 +109,7 @@ async def test_service_active_inactive(
 
     turn_on_service.pop()
 
-    hass.states.async_set('redshift.active', False)
+    hass.states.async_set('redshift.redshift_active', False)
 
     start_at_noon.tick(600)
     async_fire_time_changed_now_time(hass)
@@ -114,7 +117,7 @@ async def test_service_active_inactive(
 
     assert len(turn_on_service) == 0
 
-    hass.states.async_set('redshift.active', True)
+    hass.states.async_set('redshift.redshift_active', True)
 
     start_at_noon.tick(600)
     async_fire_time_changed_now_time(hass)
@@ -141,7 +144,7 @@ async def test_light_goes_on_while_inactive(
 
     turn_on_service.pop()
 
-    hass.states.async_set('redshift.active', False)
+    hass.states.async_set('redshift.redshift_active', False)
 
     hass.states.async_set('light.light_1', STATE_OFF, attributes=MINMAX_COLOR_TEMP_KELVIN)
 
@@ -151,7 +154,11 @@ async def test_light_goes_on_while_inactive(
 
     assert len(turn_on_service) == 0
 
-    attrs = {ATTR_COLOR_TEMP_KELVIN: 390, ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_COLOR_TEMP]}
+    attrs = {
+        ATTR_COLOR_TEMP_KELVIN: 390,
+        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_COLOR_TEMP],
+        ATTR_BRIGHTNESS: 255
+    }
     attrs.update(MINMAX_COLOR_TEMP_KELVIN)
     hass.states.async_set('light.light_1', STATE_ON, attrs)
 
@@ -161,7 +168,7 @@ async def test_light_goes_on_while_inactive(
 
     assert len(turn_on_service) == 0
 
-    hass.states.async_set('redshift.active', True)
+    hass.states.async_set('redshift.redshift_active', True)
 
     start_at_noon.tick(600)
     async_fire_time_changed_now_time(hass)
@@ -170,7 +177,38 @@ async def test_light_goes_on_while_inactive(
     assert len(turn_on_service) == 1
 
 
-async def test_override_while_active_then_reactive(
+async def test_override_brightness_do_touch(
+        hass,
+        lights,
+        turn_on_service,
+        start_at_noon
+):
+    assert await async_setup(hass, {DOMAIN: {}})
+
+    await turn_on_lights(hass, ['light_1'])
+
+    start_at_noon.move_to(some_evening_time())
+    async_fire_time_changed_now_time(hass)
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 1
+
+    call = turn_on_service.pop()
+    color_temp = call.data[ATTR_COLOR_TEMP_KELVIN]
+    assert color_temp < MAX_COLOR_TEMP_KELVIN
+
+    await turn_on_lights(hass, ['light_1'], brightness=192)
+
+    start_at_noon.move_to(some_night_time())
+    async_fire_time_changed_now_time(hass)
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 1
+    call = turn_on_service.pop()
+    assert call.data[ATTR_COLOR_TEMP_KELVIN] == MIN_COLOR_TEMP_KELVIN
+
+
+async def test_override_while_active_then_reactivate(
         hass,
         lights,
         turn_on_service,
@@ -196,7 +234,7 @@ async def test_override_while_active_then_reactive(
 
     assert len(turn_on_service) == 0
 
-    hass.states.async_set('redshift.active', False)
+    hass.states.async_set('redshift.redshift_active', False)
 
     start_at_noon.tick(600)
     async_fire_time_changed_now_time(hass)
@@ -204,7 +242,7 @@ async def test_override_while_active_then_reactive(
 
     assert len(turn_on_service) == 0
 
-    hass.states.async_set('redshift.active', True)
+    hass.states.async_set('redshift.redshift_active', True)
 
     start_at_noon.tick(600)
     async_fire_time_changed_now_time(hass)
@@ -250,7 +288,7 @@ async def test_service_turn_on_call_four_lights_1_3_on(
     assert on_lights == {'light.light_1', 'light.light_3'}
 
 
-async def test_service_turn_on_call_four_lights_3_manually_set_color_temp(
+async def test_service_turn_on_call_four_lights_3_override_color_temp(
         hass,
         more_lights,
         turn_on_service,
@@ -347,6 +385,24 @@ async def test_redshift_bwlight(
     assert await async_setup(hass, {DOMAIN: {}})
 
     await turn_on_lights(hass, ['bwlight_1'])
+
+    start_at_noon.move_to(some_evening_time())
+    async_fire_time_changed_now_time(hass)
+
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 0
+
+
+async def test_redshift_dimlight(
+        hass,
+        dim_light,
+        turn_on_service,
+        start_at_noon
+):
+    assert await async_setup(hass, {DOMAIN: {}})
+
+    await turn_on_lights(hass, ['dimlight_1'])
 
     start_at_noon.move_to(some_evening_time())
     async_fire_time_changed_now_time(hass)
@@ -808,10 +864,10 @@ async def test_redshift_deactivate_with_color_temp(
     assert await async_setup(hass, {DOMAIN: {}})
 
     await turn_on_lights(hass, ['light_1', 'light_2'])
-    await hass.services.async_call('redshift', 'deactivate', {'color_temp': 2571})
+    await hass.services.async_call('redshift', 'deactivate_redshift', {'color_temp': 2571})
     await hass.async_block_till_done()
 
-    assert hass.states.get('redshift.active').state == 'False'
+    assert hass.states.get('redshift.redshift_active').state == 'False'
 
     assert turn_on_service.pop().data[ATTR_COLOR_TEMP_KELVIN] == 2571
     assert turn_on_service.pop().data[ATTR_COLOR_TEMP_KELVIN] == 2571
@@ -832,10 +888,10 @@ async def test_redshift_deactivate_no_color_temp(
     assert await async_setup(hass, {DOMAIN: {}})
 
     await turn_on_lights(hass, ['light_1', 'light_2'])
-    await hass.services.async_call('redshift', 'deactivate', {})
+    await hass.services.async_call('redshift', 'deactivate_redshift', {})
     await hass.async_block_till_done()
 
-    assert hass.states.get('redshift.active').state == 'False'
+    assert hass.states.get('redshift.redshift_active').state == 'False'
 
     assert len(turn_on_service) == 0
 
@@ -849,14 +905,14 @@ async def test_redshift_go_redshift(
     assert await async_setup(hass, {DOMAIN: {}})
 
     await turn_on_lights(hass, ['light_1', 'light_2'])
-    await hass.services.async_call('redshift', 'deactivate', {'color_temp': 2571})
+    await hass.services.async_call('redshift', 'deactivate_redshift', {'color_temp': 2571})
     await hass.async_block_till_done()
-    assert hass.states.get('redshift.active').state == 'False'
+    assert hass.states.get('redshift.redshift_active').state == 'False'
 
-    await hass.services.async_call('redshift', 'activate', {})
+    await hass.services.async_call('redshift', 'activate_redshift', {})
     await hass.async_block_till_done()
 
-    assert hass.states.get('redshift.active').state == 'True'
+    assert hass.states.get('redshift.redshift_active').state == 'True'
 
     assert turn_on_service.pop().data[ATTR_COLOR_TEMP_KELVIN] == 6250
     assert turn_on_service.pop().data[ATTR_COLOR_TEMP_KELVIN] == 6250
