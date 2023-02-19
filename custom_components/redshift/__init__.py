@@ -93,7 +93,7 @@ async def async_setup(hass, config):
         if redshift_inactive() or int(1e6/color_temp) == current_color_temp_mired:
             return dict()
 
-        _LOGGER.debug("%s -> %s, %s", lgt, color_temp)
+        _LOGGER.debug("color temp of %s -> %s", lgt, color_temp)
 
         return {ATTR_COLOR_TEMP_KELVIN: color_temp}
 
@@ -115,7 +115,7 @@ async def async_setup(hass, config):
         if brightness_inactive() or brightness is None or brightness == current_brightness:
             return dict()
 
-        _LOGGER.debug("%s -> %s, %s", lgt, brightness)
+        _LOGGER.debug("brightness of %s -> %s", lgt, brightness)
 
         return {ATTR_BRIGHTNESS: brightness}
 
