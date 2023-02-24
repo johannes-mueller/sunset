@@ -58,7 +58,7 @@ async def async_setup(hass, config):
             return manual_brightness
         if brightness_calculator is None:
             return None
-        return final_config['night_brightness'] if brightness_calculator.is_night() else 255
+        return final_config['night_brightness'] if brightness_calculator.is_night() else 254
 
     def forget_off_lights(current_states):
         return dict(

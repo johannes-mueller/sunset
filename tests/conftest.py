@@ -82,7 +82,7 @@ def turn_on_service(hass):
         assert brightness is not None
         if brightness is None:
             if last_state is None or last_state.get(ATTR_BRIGHTNESS) is None:
-                brightness = 255
+                brightness = 254
             else:
                 brightness = last_state.get(ATTR_BRIGHTNESS)
 
@@ -100,10 +100,12 @@ def turn_on_service(hass):
         }
 
         attrs = bw_attrs if entity.startswith('light.bw') else color_tmp_attrs
-        hass.states.async_set(entity, STATE_ON, attrs)
 
         light_states[entity] = attrs
         calls.append(call)
+
+        attrs[ATTR_BRIGHTNESS] = min(brightness, 254)
+        hass.states.async_set(entity, STATE_ON, attrs)
 
     hass.services.async_register('light', SERVICE_TURN_ON, mock_service_log)
 

@@ -157,7 +157,7 @@ async def test_light_goes_on_while_inactive(
     attrs = {
         ATTR_COLOR_TEMP_KELVIN: 390,
         ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_COLOR_TEMP],
-        ATTR_BRIGHTNESS: 255
+        ATTR_BRIGHTNESS: 254
     }
     attrs.update(MINMAX_COLOR_TEMP_KELVIN)
     hass.states.async_set('light.light_1', STATE_ON, attrs)

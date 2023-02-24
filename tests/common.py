@@ -43,7 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def turn_on_lights(hass, lights, color_temp=None, brightness=None):
     """Turn on `lights`."""
-    brightness = brightness or 255
+    brightness = brightness or 254
     color_temp_attrs = {
         ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_COLOR_TEMP, COLOR_MODE_BRIGHTNESS],
         ATTR_MIN_COLOR_TEMP_KELVIN: MIN_COLOR_TEMP_KELVIN,
@@ -112,6 +112,7 @@ def some_night_time():
 
 def async_fire_time_changed_now_time(hass):
     async_fire_time_changed(hass, DT.datetime.now(), fire_all=True)
+
 
 def _color_temp_of_state(state):
     if state is None:

@@ -43,7 +43,7 @@ async def test_service_active_no_change(
     assert len(turn_on_service) == 1
 
     call = turn_on_service.pop()
-    assert call.data[ATTR_BRIGHTNESS] == 255
+    assert call.data[ATTR_BRIGHTNESS] == 254
 
 
 async def test_service_active_no_change_two_lights(
@@ -135,7 +135,7 @@ async def test_day_to_night_no_bed_time(
     assert len(turn_on_service) == 1
 
     call = turn_on_service.pop()
-    assert call.data[ATTR_BRIGHTNESS] == 255
+    assert call.data[ATTR_BRIGHTNESS] == 254
 
 
 async def test_day_to_night_changed_brightness_no_bed_time(
@@ -181,7 +181,7 @@ async def test_night_to_day(
     assert len(turn_on_service) == 1
 
     call = turn_on_service.pop()
-    assert call.data[ATTR_BRIGHTNESS] == 255
+    assert call.data[ATTR_BRIGHTNESS] == 254
 
 
 async def test_day_to_night_redshift_inactive(
@@ -275,7 +275,7 @@ async def test_day_to_night_brightness_inactive_active(
     assert len(turn_on_service) == 1
 
     call = turn_on_service.pop()
-    assert call.data[ATTR_BRIGHTNESS] == 255
+    assert call.data[ATTR_BRIGHTNESS] == 254
 
     hass.states.async_set('redshift.brightness_active', True)
 
@@ -334,7 +334,7 @@ async def test_override_brightness_do_not_touch_evening(
     assert len(turn_on_service) == 1
 
     call = turn_on_service.pop()
-    assert call.data[ATTR_BRIGHTNESS] == 255
+    assert call.data[ATTR_BRIGHTNESS] == 254
 
     await turn_on_lights(hass, ['light_1'], brightness=192)
 
@@ -364,7 +364,7 @@ async def test_override_color_temp_do_touch(
     assert len(turn_on_service) == 1
 
     call = turn_on_service.pop()
-    assert call.data[ATTR_BRIGHTNESS] == 255
+    assert call.data[ATTR_BRIGHTNESS] == 254
 
     await turn_on_lights(hass, ['light_1'], color_temp=4000)
 
@@ -476,5 +476,5 @@ async def test_brightness_go_brightness(
 
     assert hass.states.get('redshift.brightness_active').state == 'True'
 
-    assert turn_on_service.pop().data[ATTR_BRIGHTNESS] == 255
-    assert turn_on_service.pop().data[ATTR_BRIGHTNESS] == 255
+    assert turn_on_service.pop().data[ATTR_BRIGHTNESS] == 254
+    assert turn_on_service.pop().data[ATTR_BRIGHTNESS] == 254
