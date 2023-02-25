@@ -1,3 +1,5 @@
 -r requirements.txt
 pytest-homeassistant-custom-component
 freezegun
+pytest-mypy
+homeassistant-stubs
