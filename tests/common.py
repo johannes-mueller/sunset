@@ -20,6 +20,7 @@ from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_MAX_COLOR_TEMP_KELVIN,
+    COLOR_MODE_BRIGHTNESS,
     COLOR_MODE_COLOR_TEMP,
     COLOR_MODE_ONOFF,
 )
@@ -40,22 +41,29 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def turn_on_lights(hass, lights, color_temp=None):
+async def turn_on_lights(hass, lights, color_temp=None, brightness=None):
     """Turn on `lights`."""
+    brightness = brightness or 254
     color_temp_attrs = {
-        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_COLOR_TEMP],
+        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_COLOR_TEMP, COLOR_MODE_BRIGHTNESS],
         ATTR_MIN_COLOR_TEMP_KELVIN: MIN_COLOR_TEMP_KELVIN,
-        ATTR_MAX_COLOR_TEMP_KELVIN: MAX_COLOR_TEMP_KELVIN
+        ATTR_MAX_COLOR_TEMP_KELVIN: MAX_COLOR_TEMP_KELVIN,
+        ATTR_BRIGHTNESS: brightness
     }
     bw_attrs = {
-        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_ONOFF],
+        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_ONOFF]
+    }
+    dim_attrs = {
+        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_BRIGHTNESS],
+        ATTR_BRIGHTNESS: brightness
     }
     for lgt in lights:
-        state = hass.states.get(lgt)
+        state = hass.states.get('light.'+lgt)
         color_temp = color_temp or _color_temp_of_state(state) or 2630
-
         if lgt.startswith('bw'):
             attrs = bw_attrs
+        elif lgt.startswith('dim'):
+            attrs = dim_attrs
         else:
             attrs = color_temp_attrs
             attrs[ATTR_COLOR_TEMP_KELVIN] = color_temp
@@ -104,6 +112,8 @@ def some_night_time():
 
 def async_fire_time_changed_now_time(hass):
     async_fire_time_changed(hass, DT.datetime.now(), fire_all=True)
+
+
 def _color_temp_of_state(state):
     if state is None:
         return None

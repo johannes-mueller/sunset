@@ -12,7 +12,7 @@ def test_setup_redshift_calculator_default():
 
 
 def test_setup_redshift_calculator():
-    calculator = RedshiftCalculator(
+    RedshiftCalculator(
         evening_time="17:00",
         night_time="23:00",
         morning_time="07:00",

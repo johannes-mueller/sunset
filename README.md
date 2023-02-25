@@ -18,15 +18,24 @@ light would be more appropriate.  This extension for
 
 You can configure three times in your `configuration.yaml`.
 
-* `evening_time`: the time when the redshift will start
-* `night_time`: the time when the redshift has reached the final color
-  temperature.
-* `morning_time`: the time when the color temperature will get back to the
-  day time level.
+    * `evening_time`: the time when the redshift will start
+  * `night_time`: the time when the redshift has reached the final color
+    temperature.
+  * `morning_time`: the time when the color temperature will get back to the
+    day time level.
 
-* `day_color_temp`: the color temperature at daytime in Kelvin
-* `night_color_temp`: the color temperature at nighttime in Kelvin
+    * `day_color_temp`: the color temperature at daytime in Kelvin
+    * `night_color_temp`: the color temperature at nighttime in Kelvin
 
+Besides the color temperature Redshift can also manipulate the brightness of
+the lights.  In contrast to the color temperature it does not shift the
+brightness continuously but drops the brightness of all lights at a given
+time.  This is meant to be a soft reminder that it is time for you to go to
+bed.
+
+    * `bed_time`: The time when the brightness should be dropped or 'null' to
+    disable brightness manipulation.
+    * `night_brightness`: The brightness after bed time (default 127)
 
 ### Color temperature translation behavior
 
