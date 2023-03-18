@@ -10,6 +10,7 @@ import datetime as DT
 import homeassistant.core as HA
 import homeassistant.helpers.event as EV
 from homeassistant.helpers import entity_registry
+from homeassistant.helpers.typing import ConfigType
 
 from homeassistant.const import (
     STATE_ON,
@@ -36,7 +37,7 @@ DOMAIN = 'redshift'
 _LOGGER = logging.getLogger('redshift')
 
 
-async def async_setup(hass: HA.HomeAssistant, config: dict) -> bool:
+async def async_setup(hass: HA.HomeAssistant, config: ConfigType) -> bool:
 
     def redshift_inactive() -> bool:
         return hass.states.get(DOMAIN+'.redshift_active').state != 'True'
@@ -56,14 +57,19 @@ async def async_setup(hass: HA.HomeAssistant, config: dict) -> bool:
     def color_temp_in_limits(state: HA.State) -> int:
         min_color_temp_kelvin = state.attributes[ATTR_MIN_COLOR_TEMP_KELVIN]
         max_color_temp_kelvin = state.attributes[ATTR_MAX_COLOR_TEMP_KELVIN]
-        return min(max_color_temp_kelvin, max(min_color_temp_kelvin, current_target_color_temp()))
+        return min(
+            max_color_temp_kelvin,
+            max(min_color_temp_kelvin, current_target_color_temp())
+        )
 
     def new_brightness() -> int | None:
         if manual_brightness is not None:
             return manual_brightness
         if brightness_calculator is None:
             return None
-        return final_config['night_brightness'] if brightness_calculator.is_night() else 254
+        if brightness_calculator.is_night():
+            return final_config['night_brightness']
+        return 254
 
     def forget_off_lights(current_states: dict[str, HA.State]) -> dict[str, HA.State]:
         return dict(
@@ -102,7 +108,7 @@ async def async_setup(hass: HA.HomeAssistant, config: dict) -> bool:
 
         return {ATTR_COLOR_TEMP_KELVIN: color_temp}
 
-    def new_brightness_state(lgt: str, known_state: HA.State | None, current_state: HA.State):
+    def new_brightness_state(lgt: str, known_state: HA.State | None, current_state: HA.State) -> dict[str, Any]:
         known_brightness = _brightness_of_state(known_state)
         current_brightness = _brightness_of_state(current_state)
 
@@ -123,7 +129,6 @@ async def async_setup(hass: HA.HomeAssistant, config: dict) -> bool:
         _LOGGER.debug("brightness of %s -> %s", lgt, brightness)
 
         return {ATTR_BRIGHTNESS: brightness}
-
 
     async def maybe_apply_new_state(lgt: str, current_state: HA.State):
         if lgt in lights_not_to_touch:
@@ -146,7 +151,7 @@ async def async_setup(hass: HA.HomeAssistant, config: dict) -> bool:
             known_states[lgt] = HA.State(lgt, STATE_ON, call_attrs)
             await hass.services.async_call('light', SERVICE_TURN_ON, call_attrs)
 
-    async def timer_event(_: HA.Event | None) -> None:
+    async def timer_event(_: DT.datetime | None) -> None:
         nonlocal known_states
 
         current_states = fetch_light_states()
@@ -244,7 +249,6 @@ async def async_setup(hass: HA.HomeAssistant, config: dict) -> bool:
             final_config['morning_time']
         )
 
-
     final_config = finalized_config()
 
     redshift_calculator = make_redshift_calculator()
@@ -271,16 +275,16 @@ async def async_setup(hass: HA.HomeAssistant, config: dict) -> bool:
     return True
 
 
-def _color_temp_mired_of_state(state):
+def _color_temp_mired_of_state(state: HA.State | None) -> int | None:
     if state is None:
         return None
     color_temp = state.attributes.get(ATTR_COLOR_TEMP_KELVIN)
     if color_temp is None:
-        return
+        return None
     return int(1e6/color_temp)
 
 
-def _brightness_of_state(state):
+def _brightness_of_state(state: HA.State | None) -> int | None:
     if state is None:
         return None
     return state.attributes.get(ATTR_BRIGHTNESS)
