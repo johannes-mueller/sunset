@@ -145,8 +145,6 @@ async def async_setup(hass, config):
     async def timer_event(event):
         nonlocal known_states
 
-        await hass.async_block_till_done()
-
         current_states = fetch_light_states()
         known_states = forget_off_lights(current_states)
 
