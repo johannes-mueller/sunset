@@ -2,11 +2,11 @@ import pytest
 
 import freezegun as FG
 
-from custom_components.redshift.calculator import BrightnessCalculator
+from custom_components.redshift.calculator import DaytimeCalculator
 
 
 def test_setup_brightness_calculator():
-    BrightnessCalculator(
+    DaytimeCalculator(
         night_time="23:00",
         morning_time="06:00"
     )
@@ -19,7 +19,7 @@ def test_setup_brightness_calculator():
     ("07:00", False)
 ])
 def test_is_night_23_06(now_time, expected):
-    calculator = BrightnessCalculator(
+    calculator = DaytimeCalculator(
         night_time="23:00",
         morning_time="06:00"
     )
@@ -36,7 +36,7 @@ def test_is_night_23_06(now_time, expected):
     ("07:00", False)
 ])
 def test_is_night_01_06(now_time, expected):
-    calculator = BrightnessCalculator(
+    calculator = DaytimeCalculator(
         night_time="01:00",
         morning_time="06:00"
     )

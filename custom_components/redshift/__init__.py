@@ -30,7 +30,7 @@ from homeassistant.components.light import (
     COLOR_MODE_COLOR_TEMP,
 )
 
-from .calculator import RedshiftCalculator, BrightnessCalculator
+from .calculator import RedshiftCalculator, DaytimeCalculator
 
 DOMAIN = 'redshift'
 
@@ -241,10 +241,10 @@ async def async_setup(hass: HA.HomeAssistant, config: ConfigType) -> bool:
             final_config['night_color_temp'],
         )
 
-    def make_brightness_calculator() -> BrightnessCalculator | None:
+    def make_brightness_calculator() -> DaytimeCalculator | None:
         if final_config['bed_time'] == 'null':
             return None
-        return BrightnessCalculator(
+        return DaytimeCalculator(
             final_config['bed_time'],
             final_config['morning_time']
         )

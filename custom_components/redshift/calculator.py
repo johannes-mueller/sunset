@@ -3,13 +3,16 @@
 import datetime as DT
 
 
-class _AbstractCalculator:
+class DaytimeCalculator:
 
     def __init__(self, night_time: str, morning_time: str):
         self._night_time: DT.time = DT.time.fromisoformat(night_time)
         self._morning_time = DT.time.fromisoformat(morning_time)
 
-    def _night(self) -> DT.datetime:
+    def is_night(self) -> bool:
+        return DT.datetime.now() > self._night_start()
+
+    def _night_start(self) -> DT.datetime:
         return self._time_corrected(self._night_time)
 
     def _morning(self) -> DT.datetime:
@@ -29,7 +32,7 @@ class _AbstractCalculator:
         return today_time
 
 
-class RedshiftCalculator(_AbstractCalculator):
+class RedshiftCalculator(DaytimeCalculator):
 
     def __init__(
             self,
@@ -45,36 +48,26 @@ class RedshiftCalculator(_AbstractCalculator):
         self._evening_time: DT.time = DT.time.fromisoformat(evening_time)
         super().__init__(night_time, morning_time)
 
+    def is_day(self):
+        return DT.datetime.now() < self._evening_start()
+
     def color_temp(self) -> int:
-        now = DT.datetime.now()
-
-        night = self._night()
-
-        if now > night:
+        if self.is_night():
             return self._night_color_temp
 
-        evening = self._evening()
-
-        if now < evening:
+        if self.is_day():
             return self._day_color_temp
 
-        evening_time_span = (night - evening).seconds
-        elapsed_seconds = (now - evening).seconds
+        return self._interpolated_color_temp()
+
+    def _interpolated_color_temp(self) -> int:
+        evening_time_span = (self._night_start() - self._evening_start()).seconds
+        time_into_evening = (DT.datetime.now() - self._evening_start()).seconds
 
         color_range = self._night_color_temp - self._day_color_temp
 
-        color = self._day_color_temp + color_range / evening_time_span * elapsed_seconds
+        color = self._day_color_temp + color_range / evening_time_span * time_into_evening
         return round(color)
 
-    def _evening(self):
+    def _evening_start(self):
         return self._time_corrected(self._evening_time)
-
-
-class BrightnessCalculator(_AbstractCalculator):
-
-    def is_night(self) -> bool:
-        now = DT.datetime.now()
-
-        night = self._night()
-
-        return now > night
