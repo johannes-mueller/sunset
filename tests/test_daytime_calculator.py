@@ -2,7 +2,7 @@ import pytest
 
 import freezegun as FG
 
-from custom_components.redshift.calculator import DaytimeCalculator
+from custom_components.sunset.calculator import DaytimeCalculator
 
 
 def test_setup_brightness_calculator():

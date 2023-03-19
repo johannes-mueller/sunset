@@ -35,7 +35,7 @@ from .common import (
     some_evening_time
 )
 
-from custom_components.redshift import async_setup
+from custom_components.sunset import async_setup
 
 
 async def test_no_call_right_after_setup(
@@ -109,7 +109,7 @@ async def test_service_active_inactive(
 
     turn_on_service.pop()
 
-    hass.states.async_set('redshift.redshift_active', False)
+    hass.states.async_set('sunset.redshift_active', False)
 
     start_at_noon.tick(600)
     async_fire_time_changed_now_time(hass)
@@ -117,7 +117,7 @@ async def test_service_active_inactive(
 
     assert len(turn_on_service) == 0
 
-    hass.states.async_set('redshift.redshift_active', True)
+    hass.states.async_set('sunset.redshift_active', True)
 
     start_at_noon.tick(600)
     async_fire_time_changed_now_time(hass)
@@ -144,7 +144,7 @@ async def test_light_goes_on_while_inactive(
 
     turn_on_service.pop()
 
-    hass.states.async_set('redshift.redshift_active', False)
+    hass.states.async_set('sunset.redshift_active', False)
 
     hass.states.async_set('light.light_1', STATE_OFF, attributes=MINMAX_COLOR_TEMP_KELVIN)
 
@@ -168,7 +168,7 @@ async def test_light_goes_on_while_inactive(
 
     assert len(turn_on_service) == 0
 
-    hass.states.async_set('redshift.redshift_active', True)
+    hass.states.async_set('sunset.redshift_active', True)
 
     start_at_noon.tick(600)
     async_fire_time_changed_now_time(hass)
@@ -234,7 +234,7 @@ async def test_override_while_active_then_reactivate(
 
     assert len(turn_on_service) == 0
 
-    hass.states.async_set('redshift.redshift_active', False)
+    hass.states.async_set('sunset.redshift_active', False)
 
     start_at_noon.tick(600)
     async_fire_time_changed_now_time(hass)
@@ -242,7 +242,7 @@ async def test_override_while_active_then_reactivate(
 
     assert len(turn_on_service) == 0
 
-    hass.states.async_set('redshift.redshift_active', True)
+    hass.states.async_set('sunset.redshift_active', True)
 
     start_at_noon.tick(600)
     async_fire_time_changed_now_time(hass)
@@ -645,7 +645,7 @@ async def test_redshift_dont_touch(
     assert await async_setup(hass, {DOMAIN: {}})
 
     await turn_on_lights(hass, ['light_1', 'light_2'])
-    await hass.services.async_call('redshift', 'dont_touch', {ATTR_ENTITY_ID: ['light.light_2']})
+    await hass.services.async_call('sunset', 'dont_touch', {ATTR_ENTITY_ID: ['light.light_2']})
     await hass.async_block_till_done()
 
     start_at_noon.tick(600)
@@ -656,7 +656,7 @@ async def test_redshift_dont_touch(
     assert turn_on_service.pop().data[ATTR_ENTITY_ID] == 'light.light_1'
     assert len(turn_on_service) == 0
 
-    await hass.services.async_call('redshift', 'dont_touch', {ATTR_ENTITY_ID: ['light.light_1']})
+    await hass.services.async_call('sunset', 'dont_touch', {ATTR_ENTITY_ID: ['light.light_1']})
     await hass.async_block_till_done()
 
     start_at_noon.move_to(some_evening_time())
@@ -666,7 +666,7 @@ async def test_redshift_dont_touch(
 
     assert len(turn_on_service) == 0
 
-    await hass.services.async_call('redshift', 'handle_again', {ATTR_ENTITY_ID: ['light.light_2']})
+    await hass.services.async_call('sunset', 'handle_again', {ATTR_ENTITY_ID: ['light.light_2']})
     await hass.async_block_till_done()
 
     start_at_noon.tick(600)
@@ -682,7 +682,7 @@ async def test_redshift_handle_again_key_error(
 ):
     assert await async_setup(hass, {DOMAIN: {}})
 
-    await hass.services.async_call('redshift', 'handle_again', {ATTR_ENTITY_ID: ['some_stupidity']})
+    await hass.services.async_call('sunset', 'handle_again', {ATTR_ENTITY_ID: ['some_stupidity']})
     await hass.async_block_till_done()
 
     assert not any(r.levelname == 'ERROR' for r in caplog.records)
@@ -695,7 +695,7 @@ async def test_redshift_handle_again_key_error(
     caplog.clear()
 
     assert not any(r.levelname == 'ERROR' for r in caplog.records)
-    await hass.services.async_call('redshift', 'handle_again', {ATTR_ENTITY_ID: ['another_stupidity']})
+    await hass.services.async_call('sunset', 'handle_again', {ATTR_ENTITY_ID: ['another_stupidity']})
     await hass.async_block_till_done()
 
     assert sum(1 for r in caplog.records if r.levelname == 'WARNING') == 1
@@ -711,9 +711,9 @@ async def test_redshift_handle_again_no_key_error(
 ):
     assert await async_setup(hass, {DOMAIN: {}})
 
-    await hass.services.async_call('redshift', 'dont_touch', {ATTR_ENTITY_ID: ['some_stupidity']})
+    await hass.services.async_call('sunset', 'dont_touch', {ATTR_ENTITY_ID: ['some_stupidity']})
     await hass.async_block_till_done()
-    await hass.services.async_call('redshift', 'handle_again', {ATTR_ENTITY_ID: ['some_stupidity']})
+    await hass.services.async_call('sunset', 'handle_again', {ATTR_ENTITY_ID: ['some_stupidity']})
     await hass.async_block_till_done()
 
     assert not any(r.levelname == 'ERROR' for r in caplog.records)
@@ -728,8 +728,8 @@ async def test_redshift_dont_touch_entity_id_not_as_list(
         caplog
 ):
     assert await async_setup(hass, {DOMAIN: {}})
-    await hass.services.async_call('redshift', 'dont_touch', {ATTR_ENTITY_ID: 'some_stupidity'})
-    await hass.services.async_call('redshift', 'handle_again', {ATTR_ENTITY_ID: 'some_stupidity'})
+    await hass.services.async_call('sunset', 'dont_touch', {ATTR_ENTITY_ID: 'some_stupidity'})
+    await hass.services.async_call('sunset', 'handle_again', {ATTR_ENTITY_ID: 'some_stupidity'})
 
     await hass.async_block_till_done()
 
@@ -747,7 +747,7 @@ async def test_redshift_dont_touch_devices(
     await turn_on_lights(hass, ['light_1', 'light_2'])
 
     await hass.services.async_call(
-        'redshift',
+        'sunset',
         'dont_touch',
         {ATTR_DEVICE_ID: 'device_id_light_1'}
     )
@@ -763,7 +763,7 @@ async def test_redshift_dont_touch_devices(
     assert len(turn_on_service) == 0
 
     await hass.services.async_call(
-        'redshift',
+        'sunset',
         'dont_touch',
         {ATTR_DEVICE_ID: 'device_id_light_2'}
     )
@@ -778,7 +778,7 @@ async def test_redshift_dont_touch_devices(
     assert len(turn_on_service) == 0
 
     await hass.services.async_call(
-        'redshift',
+        'sunset',
         'handle_again',
         {ATTR_DEVICE_ID: 'device_id_light_1'}
     )
@@ -802,7 +802,7 @@ async def test_redshift_dont_touch_areas(
     await turn_on_lights(hass, ['light_1', 'light_2', 'light_3', 'light_4'])
 
     await hass.services.async_call(
-        'redshift',
+        'sunset',
         'dont_touch',
         {ATTR_AREA_ID: 'area_1'}
     )
@@ -822,7 +822,7 @@ async def test_redshift_dont_touch_areas(
     assert len(turn_on_service) == 0
 
     await hass.services.async_call(
-        'redshift',
+        'sunset',
         'dont_touch',
         {ATTR_AREA_ID: 'area_2'}
     )
@@ -837,7 +837,7 @@ async def test_redshift_dont_touch_areas(
     assert len(turn_on_service) == 0
 
     await hass.services.async_call(
-        'redshift',
+        'sunset',
         'handle_again',
         {ATTR_AREA_ID: 'area_1'}
     )
@@ -864,10 +864,10 @@ async def test_redshift_deactivate_with_color_temp(
     assert await async_setup(hass, {DOMAIN: {}})
 
     await turn_on_lights(hass, ['light_1', 'light_2'])
-    await hass.services.async_call('redshift', 'deactivate_redshift', {'color_temp': 2571})
+    await hass.services.async_call('sunset', 'deactivate_redshift', {'color_temp': 2571})
     await hass.async_block_till_done()
 
-    assert hass.states.get('redshift.redshift_active').state == 'False'
+    assert hass.states.get('sunset.redshift_active').state == 'False'
 
     assert turn_on_service.pop().data[ATTR_COLOR_TEMP_KELVIN] == 2571
     assert turn_on_service.pop().data[ATTR_COLOR_TEMP_KELVIN] == 2571
@@ -888,10 +888,10 @@ async def test_redshift_deactivate_no_color_temp(
     assert await async_setup(hass, {DOMAIN: {}})
 
     await turn_on_lights(hass, ['light_1', 'light_2'])
-    await hass.services.async_call('redshift', 'deactivate_redshift', {})
+    await hass.services.async_call('sunset', 'deactivate_redshift', {})
     await hass.async_block_till_done()
 
-    assert hass.states.get('redshift.redshift_active').state == 'False'
+    assert hass.states.get('sunset.redshift_active').state == 'False'
 
     assert len(turn_on_service) == 0
 
@@ -905,14 +905,14 @@ async def test_redshift_go_redshift(
     assert await async_setup(hass, {DOMAIN: {}})
 
     await turn_on_lights(hass, ['light_1', 'light_2'])
-    await hass.services.async_call('redshift', 'deactivate_redshift', {'color_temp': 2571})
+    await hass.services.async_call('sunset', 'deactivate_redshift', {'color_temp': 2571})
     await hass.async_block_till_done()
-    assert hass.states.get('redshift.redshift_active').state == 'False'
+    assert hass.states.get('sunset.redshift_active').state == 'False'
 
-    await hass.services.async_call('redshift', 'activate_redshift', {})
+    await hass.services.async_call('sunset', 'activate_redshift', {})
     await hass.async_block_till_done()
 
-    assert hass.states.get('redshift.redshift_active').state == 'True'
+    assert hass.states.get('sunset.redshift_active').state == 'True'
 
     assert turn_on_service.pop().data[ATTR_COLOR_TEMP_KELVIN] == 6250
     assert turn_on_service.pop().data[ATTR_COLOR_TEMP_KELVIN] == 6250

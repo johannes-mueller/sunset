@@ -1,5 +1,5 @@
 
-DOMAIN = 'redshift'
+DOMAIN = 'sunset'
 
 MIN_COLOR_TEMP_KELVIN = 2500
 MAX_COLOR_TEMP_KELVIN = 6250

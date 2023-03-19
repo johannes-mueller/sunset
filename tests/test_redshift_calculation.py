@@ -4,7 +4,7 @@ import pytest
 
 import freezegun as FG
 
-from custom_components.redshift.calculator import RedshiftCalculator
+from custom_components.sunset.calculator import RedshiftCalculator
 
 
 def test_setup_redshift_calculator_default():

@@ -12,7 +12,7 @@ from homeassistant.components.light import (
 
 
 
-from custom_components.redshift import async_setup
+from custom_components.sunset import async_setup
 
 
 from .common import (
@@ -184,14 +184,14 @@ async def test_night_to_day(
     assert call.data[ATTR_BRIGHTNESS] == 254
 
 
-async def test_day_to_night_redshift_inactive(
+async def test_day_to_night_sunset_inactive(
         hass,
         lights,
         turn_on_service,
         start_at_noon
 ):
     assert await async_setup(hass, {DOMAIN: {}})
-    hass.states.async_set('redshift.redshift_active', False)
+    hass.states.async_set('sunset.redshift_active', False)
 
     await turn_on_lights(hass, ['light_1'])
 
@@ -219,10 +219,10 @@ async def test_brightness_deactivate_with_brightness(
     assert await async_setup(hass, {DOMAIN: {}})
 
     await turn_on_lights(hass, ['light_1', 'light_2'])
-    await hass.services.async_call('redshift', 'deactivate_brightness', {'brightness': 192})
+    await hass.services.async_call('sunset', 'deactivate_brightness', {'brightness': 192})
     await hass.async_block_till_done()
 
-    assert hass.states.get('redshift.brightness_active').state == 'False'
+    assert hass.states.get('sunset.brightness_active').state == 'False'
 
     assert turn_on_service.pop().data[ATTR_BRIGHTNESS] == 192
     assert turn_on_service.pop().data[ATTR_BRIGHTNESS] == 192
@@ -243,10 +243,10 @@ async def test_brightness_deactivate_no_brightness(
     assert await async_setup(hass, {DOMAIN: {}})
 
     await turn_on_lights(hass, ['light_1', 'light_2'])
-    await hass.services.async_call('redshift', 'deactivate_brightness', {})
+    await hass.services.async_call('sunset', 'deactivate_brightness', {})
     await hass.async_block_till_done()
 
-    assert hass.states.get('redshift.brightness_active').state == 'False'
+    assert hass.states.get('sunset.brightness_active').state == 'False'
 
     assert len(turn_on_service) == 0
 
@@ -258,7 +258,7 @@ async def test_day_to_night_brightness_inactive_active(
         start_at_noon
 ):
     assert await async_setup(hass, {DOMAIN: {}})
-    hass.states.async_set('redshift.brightness_active', False)
+    hass.states.async_set('sunset.brightness_active', False)
 
     await turn_on_lights(hass, ['light_1'])
 
@@ -277,7 +277,7 @@ async def test_day_to_night_brightness_inactive_active(
     call = turn_on_service.pop()
     assert call.data[ATTR_BRIGHTNESS] == 254
 
-    hass.states.async_set('redshift.brightness_active', True)
+    hass.states.async_set('sunset.brightness_active', True)
 
     start_at_noon.tick(600)
     async_fire_time_changed_now_time(hass)
@@ -405,7 +405,7 @@ async def test_override_while_active_then_reactivate(
 
     assert len(turn_on_service) == 0
 
-    hass.states.async_set('redshift.brightness_active', False)
+    hass.states.async_set('sunset.brightness_active', False)
 
     start_at_noon.tick(600)
     async_fire_time_changed_now_time(hass)
@@ -413,7 +413,7 @@ async def test_override_while_active_then_reactivate(
 
     assert len(turn_on_service) == 0
 
-    hass.states.async_set('redshift.brightness_active', True)
+    hass.states.async_set('sunset.brightness_active', True)
 
     start_at_noon.tick(600)
     async_fire_time_changed_now_time(hass)
@@ -467,14 +467,14 @@ async def test_brightness_go_brightness(
     assert await async_setup(hass, {DOMAIN: {}})
 
     await turn_on_lights(hass, ['light_1', 'light_2'])
-    await hass.services.async_call('redshift', 'deactivate_brightness', {'brightness': 192})
+    await hass.services.async_call('sunset', 'deactivate_brightness', {'brightness': 192})
     await hass.async_block_till_done()
-    assert hass.states.get('redshift.brightness_active').state == 'False'
+    assert hass.states.get('sunset.brightness_active').state == 'False'
 
-    await hass.services.async_call('redshift', 'activate_brightness', {})
+    await hass.services.async_call('sunset', 'activate_brightness', {})
     await hass.async_block_till_done()
 
-    assert hass.states.get('redshift.brightness_active').state == 'True'
+    assert hass.states.get('sunset.brightness_active').state == 'True'
 
     assert turn_on_service.pop().data[ATTR_BRIGHTNESS] == 254
     assert turn_on_service.pop().data[ATTR_BRIGHTNESS] == 254

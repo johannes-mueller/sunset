@@ -32,9 +32,9 @@ from homeassistant.components.light import (
 
 from .calculator import RedshiftCalculator, DaytimeCalculator
 
-DOMAIN = 'redshift'
+DOMAIN = 'sunset'
 
-_LOGGER = logging.getLogger('redshift')
+_LOGGER = logging.getLogger('sunset')
 
 
 async def async_setup(hass: HA.HomeAssistant, config: ConfigType) -> bool:
@@ -161,17 +161,17 @@ async def async_setup(hass: HA.HomeAssistant, config: ConfigType) -> bool:
             await maybe_apply_new_state(lgt, current_state)
 
     def dont_touch(event: HA.Event) -> None:
-        for entity_id in entities_ids_from_event(event):
+        for entity_id in entity_ids_from_event(event):
             lights_not_to_touch.add(entity_id)
 
     def handle_again(event: HA.Event) -> None:
-        for entity_id in entities_ids_from_event(event):
+        for entity_id in entity_ids_from_event(event):
             if entity_id not in lights_not_to_touch:
                 _LOGGER.warning("Unknown entity_id: %s" % entity_id)
                 continue
             lights_not_to_touch.remove(entity_id)
 
-    def entities_ids_from_event(event: HA.Event) -> Generator[str, None, None]:
+    def entity_ids_from_event(event: HA.Event) -> Generator[str, None, None]:
         entity_reg = entity_registry.async_get(hass)
 
         device_id = event.data.get(ATTR_DEVICE_ID)
