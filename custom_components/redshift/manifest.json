@@ -1,7 +1,7 @@
 {
     "domain": "redshift",
     "name": "Redshift",
-    "documentation": "",
+    "documentation": "https://github.com/johannes-mueller/redshift/blob/hacs-integration/README.md",
     "dependencies": [],
     "codeowners": ["@johannes-mueller"],
     "requirements": [],
