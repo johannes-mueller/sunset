@@ -1,11 +1,11 @@
 {
-    "domain": "redshift",
-    "name": "Redshift",
+    "domain": "sunset",
+    "name": "Sunset",
     "codeowners": ["@johannes-mueller"],
     "dependencies": [],
-    "documentation": "https://github.com/johannes-mueller/redshift/blob/hacs-integration/README.md",
+    "documentation": "https://github.com/johannes-mueller/sunset/blob/hacs-integration/README.md",
     "iot_class": "local_polling",
-    "issue_tracker": "https://github.com/johannes-mueller/redshift/issues",
+    "issue_tracker": "https://github.com/johannes-mueller/sunset/issues",
     "requirements": [],
     "version": "0.1.0"
 }
