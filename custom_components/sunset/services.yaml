@@ -38,14 +38,14 @@ deactivate_brightness:
 
 dont_touch:
   name: Don't touch
-  description: Don't manipulate given lights with the redshift.
+  description: Don't manipulate given lights.
   target:
     entity:
       domain: light
 
 handle_again:
   name: Handle again
-  description: Again manipulate given lights with the redshift.
+  description: Again manipulate given lights.
   target:
     entity:
       domain: light
