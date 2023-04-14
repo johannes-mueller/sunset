@@ -18,7 +18,7 @@ light would be more appropriate.  This extension for
 
 You can configure three times in your `configuration.yaml`.
 
-    * `evening_time`: the time when the redshift will start
+  * `evening_time`: the time when the redshift will start
   * `night_time`: the time when the redshift has reached the final color
     temperature.
   * `morning_time`: the time when the color temperature will get back to the
