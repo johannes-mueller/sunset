@@ -33,6 +33,14 @@ from .const import (
 )
 
 
+@pytest.fixture(autouse=True)
+def cleanup(event_loop):
+    yield
+    for handle in event_loop._scheduled:
+        if not handle.cancelled():
+            handle.cancel()
+
+
 @pytest.fixture
 async def lights(hass):
     """Provide lights 'light.light_1' and 'light.light_2'."""
