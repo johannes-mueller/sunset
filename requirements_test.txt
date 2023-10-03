@@ -2,4 +2,4 @@
 pytest-homeassistant-custom-component
 freezegun
 pytest-mypy
-homeassistant-stubs
+homeassistant-stubs>=2023.09
