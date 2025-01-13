@@ -167,6 +167,9 @@ async def async_setup(hass: HA.HomeAssistant, config: ConfigType) -> bool:
     async def timer_event(_: DT.datetime | None) -> None:
         nonlocal known_states
 
+        hass.states.async_set(DOMAIN + ".color_temp_kelvin", current_target_color_temp())
+        hass.states.async_set(DOMAIN + ".brightness", new_brightness())
+
         current_states = fetch_light_states()
         known_states = forget_off_lights(current_states)
 
@@ -282,6 +285,10 @@ async def async_setup(hass: HA.HomeAssistant, config: ConfigType) -> bool:
 
     hass.states.async_set(DOMAIN + ".redshift_active", True)
     hass.states.async_set(DOMAIN + ".brightness_active", True)
+
+    hass.states.async_set(DOMAIN + ".color_temp_kelvin", current_target_color_temp())
+    hass.states.async_set(DOMAIN + ".brightness", new_brightness())
+
     EV.async_track_time_interval(hass, timer_event, DT.timedelta(seconds=1))
 
     return True

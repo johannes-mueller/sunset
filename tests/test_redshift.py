@@ -972,3 +972,19 @@ async def test_manual_redshift_not_intervened_by_brightness(
     await hass.async_block_till_done()
 
     assert turn_on_service.pop().data[ATTR_COLOR_TEMP_KELVIN] == 3500
+
+
+async def test_global_color_temp(hass, start_at_noon):
+    assert await async_setup(hass, {DOMAIN: {}})
+
+    start_at_noon.tick(600)
+    async_fire_time_changed_now_time(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get('sunset.color_temp_kelvin').state == '6250'
+
+    start_at_noon.move_to(some_evening_time())
+    async_fire_time_changed_now_time(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get('sunset.color_temp_kelvin').state == '4375'
