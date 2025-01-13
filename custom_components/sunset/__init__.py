@@ -160,7 +160,8 @@ async def async_setup(hass: HA.HomeAssistant, config: ConfigType) -> bool:
                 if key in current_attrs
             } | {ATTR_ENTITY_ID: lgt}
             call_attrs.update(attrs)
-            known_states[lgt] = HA.State(lgt, STATE_ON, call_attrs)
+            known_attributes = known_state.attributes if known_state is not None else current_state.attributes
+            known_states[lgt] = HA.State(lgt, STATE_ON, known_attributes | attrs)
             await hass.services.async_call("light", SERVICE_TURN_ON, call_attrs)
 
     async def timer_event(_: DT.datetime | None) -> None:

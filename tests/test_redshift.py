@@ -939,3 +939,36 @@ async def test_redshift_only_relevant_attrs_in_call(
         ATTR_COLOR_TEMP_KELVIN,
         ATTR_BRIGHTNESS
     }
+
+
+async def test_manual_redshift_not_intervened_by_brightness(
+        hass,
+        lights,
+        turn_on_service,
+        start_at_noon
+):
+    assert await async_setup(hass, {DOMAIN: {}})
+
+    await turn_on_lights(hass, ['light_1'])
+    start_at_noon.move_to(some_evening_time())
+    async_fire_time_changed_now_time(hass)
+    await hass.async_block_till_done()
+
+    await turn_on_lights(hass, ['light_1'], color_temp=3500)
+    start_at_noon.tick(600)
+    async_fire_time_changed_now_time(hass)
+    await hass.async_block_till_done()
+
+#    assert turn_on_service.pop().data[ATTR_COLOR_TEMP_KELVIN] == 3500
+
+    start_at_noon.move_to(some_night_time())
+    async_fire_time_changed_now_time(hass)
+    await hass.async_block_till_done()
+
+#    assert turn_on_service.pop().data[ATTR_COLOR_TEMP_KELVIN] == 3500
+
+    start_at_noon.tick(600)
+    async_fire_time_changed_now_time(hass)
+    await hass.async_block_till_done()
+
+    assert turn_on_service.pop().data[ATTR_COLOR_TEMP_KELVIN] == 3500

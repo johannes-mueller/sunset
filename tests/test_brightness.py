@@ -7,6 +7,7 @@ from homeassistant.const import (
 from homeassistant.components.light import (
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP_KELVIN,
     COLOR_MODE_BRIGHTNESS
 )
 
@@ -478,3 +479,36 @@ async def test_brightness_go_brightness(
 
     assert turn_on_service.pop().data[ATTR_BRIGHTNESS] == 254
     assert turn_on_service.pop().data[ATTR_BRIGHTNESS] == 254
+
+
+async def test_manual_brightness_not_intervened_by_redshift(
+        hass,
+        lights,
+        turn_on_service,
+        start_at_noon
+):
+    assert await async_setup(hass, {DOMAIN: {}})
+
+    await turn_on_lights(hass, ['light_1'])
+    start_at_noon.move_to(some_evening_time())
+    async_fire_time_changed_now_time(hass)
+    await hass.async_block_till_done()
+
+    await turn_on_lights(hass, ['light_1'], brightness=128)
+    start_at_noon.tick(600)
+    async_fire_time_changed_now_time(hass)
+    await hass.async_block_till_done()
+
+    assert turn_on_service.pop().data[ATTR_BRIGHTNESS] == 128
+
+    start_at_noon.move_to(some_evening_time())
+    async_fire_time_changed_now_time(hass)
+    await hass.async_block_till_done()
+
+    assert turn_on_service.pop().data[ATTR_BRIGHTNESS] == 128
+
+    start_at_noon.tick(600)
+    async_fire_time_changed_now_time(hass)
+    await hass.async_block_till_done()
+
+    assert turn_on_service.pop().data[ATTR_BRIGHTNESS] == 128
