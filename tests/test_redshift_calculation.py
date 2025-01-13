@@ -47,7 +47,7 @@ def test_redshift_value_nighttime(night_color_temp):
         assert calculator.color_temp() == night_color_temp
 
 
-def test_redhift_value_nighttime_after_midnight():
+def test_redshift_value_nighttime_after_midnight():
     calculator = RedshiftCalculator(
         evening_time="17:00",
         night_time="23:00",
@@ -59,7 +59,7 @@ def test_redhift_value_nighttime_after_midnight():
         assert calculator.color_temp() == 2500
 
 
-def test_redhift_value_nighttime_change_after_midnight():
+def test_redshift_value_nighttime_change_after_midnight():
     calculator = RedshiftCalculator(
         evening_time="17:00",
         night_time="01:00",
@@ -78,7 +78,7 @@ def test_redhift_value_nighttime_change_after_midnight():
     ("17:00", 6000),
     ("23:00", 3000)
 ])
-def test_redhift_value_evening_time(time, expected):
+def test_redshift_value_evening_time(time, expected):
     calculator = RedshiftCalculator(
         evening_time="17:00",
         night_time="23:00",
@@ -95,7 +95,7 @@ def test_redhift_value_evening_time(time, expected):
     ("21:00", "01:00", "23:00"),
     ("23:00", "03:00", "01:00")
 ])
-def test_redhift_value_evening_time_after_midnight(evening, night, now):
+def test_redshift_value_evening_time_after_midnight(evening, night, now):
     calculator = RedshiftCalculator(
         evening_time=evening,
         night_time=night,
