@@ -18,7 +18,6 @@ from homeassistant.components.light import (
     COLOR_MODE_COLOR_TEMP
 )
 
-from homeassistant.helpers import device_registry, entity_registry
 
 from .const import (
     DOMAIN,
@@ -37,6 +36,8 @@ from .common import (
 
 from custom_components.sunset import async_setup
 
+from homeassistant.helpers.device_registry import DeviceRegistry, DeviceInfo
+from homeassistant.helpers.entity_registry import EntityRegistry
 
 async def test_no_call_right_after_setup(
         hass,
@@ -740,16 +741,24 @@ async def test_redshift_dont_touch_devices(
         hass,
         lights,
         turn_on_service,
-        start_at_noon
+        start_at_noon,
 ):
     assert await async_setup(hass, {DOMAIN: {}})
+
+
+    light_1, light_2 = lights[0], lights[1]
+
+    entity_id_1 = light_1.entity_id
+    entity_id_2 = light_2.entity_id
+    device_id_1 = light_1.device_id
+    device_id_2 = light_2.device_id
 
     await turn_on_lights(hass, ['light_1', 'light_2'])
 
     await hass.services.async_call(
         'sunset',
         'dont_touch',
-        {ATTR_DEVICE_ID: 'device_id_light_1'}
+        {ATTR_DEVICE_ID: device_id_1}
     )
 
     await hass.async_block_till_done()
@@ -759,13 +768,13 @@ async def test_redshift_dont_touch_devices(
 
     await hass.async_block_till_done()
 
-    assert turn_on_service.pop().data[ATTR_ENTITY_ID] == 'light.light_2'
+    assert turn_on_service.pop().data[ATTR_ENTITY_ID] == entity_id_2
     assert len(turn_on_service) == 0
 
     await hass.services.async_call(
         'sunset',
         'dont_touch',
-        {ATTR_DEVICE_ID: 'device_id_light_2'}
+        {ATTR_DEVICE_ID: device_id_2}
     )
 
     await hass.async_block_till_done()
@@ -780,7 +789,7 @@ async def test_redshift_dont_touch_devices(
     await hass.services.async_call(
         'sunset',
         'handle_again',
-        {ATTR_DEVICE_ID: 'device_id_light_1'}
+        {ATTR_DEVICE_ID: device_id_1}
     )
     await hass.async_block_till_done()
 
