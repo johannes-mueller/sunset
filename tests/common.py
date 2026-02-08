@@ -29,7 +29,9 @@ from homeassistant.helpers.entity_component import (
     EntityComponent,
 )
 
-from homeassistant.helpers import entity_registry
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.device_registry import DeviceRegistry, DeviceInfo
+from homeassistant.helpers.entity_registry import EntityRegistry
 
 
 from .const import (
@@ -71,24 +73,38 @@ async def turn_on_lights(hass, lights, color_temp=None, brightness=None):
         hass.states.async_set('light.'+lgt, STATE_ON, attrs)
 
 
-async def make_lights(hass, lights, area_name):
+async def make_lights(hass, entity_registry: EntityRegistry, device_registry: DeviceRegistry, config_entry,  lights, area_name):
     """Setup light entities `lights`."""
-    component = EntityComponent(_LOGGER, 'light', hass)
 
-    await component.async_add_entities([
-        _make_light(hass, lgt, area_name) for lgt in lights
-    ])
+    def _make_light(hass, light):
+        device = device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id, identifiers={("light", "identifier-" + light)}
+        )
+
+        entity_entry = entity_registry.async_get_or_create('light', '', light, device_id=device.id)
+        entity_id = entity_entry.entity_id
+        print(light, entity_id)
+
+        entity_registry.async_update_entity(entity_id, area_id=area_name, device_id=device.id)
+        entity = MockEntity(entity_id=entity_id, area_id=area_name)
+        print(entity.entity_id)
+        return entity
+
+    entities = [_make_light(hass, lgt) for lgt in lights]
+
+    print("entities_0")
+    for ent in entities:
+        print(ent.entity_id)
+
 
     for lgt in lights:
         hass.states.async_set('light.'+lgt, STATE_OFF, attributes=MINMAX_COLOR_TEMP_KELVIN)
 
+    print("entities_1")
+    for ent in entities:
+        print(ent.entity_id)
 
-def _make_light(hass, light, area_id):
-    entity_reg = entity_registry.async_get(hass)
-    entity_entry = entity_reg.async_get_or_create('light', '', light, device_id='device_id_'+light)
-    entity_reg.async_update_entity(entity_entry.entity_id, area_id=area_id)
-    return MockEntity(entity_id='light.'+light, device_id='device_id_'+light, area_id=area_id)
-
+    return [entity_registry.async_get(entity.entity_id) for entity in entities]
 
 
 def _time_forward(time_string):

@@ -1,0 +1,23 @@
+[project]
+name = "sunset"
+version = "0.1.0"
+description = "Mimic twilight to get yourself accustomed to the evening for better sleep"
+readme = "README.md"
+authors = [
+    { name = "Johannes Mueller", email = "github@johannes-mueller.org" }
+]
+requires-python = ">=3.14"
+dependencies = ["homeassistant"]
+
+[dependency-groups]
+dev = [
+    "homeassistant-stubs>=2025.4.4",
+    "pytest>=9.0.0",
+    "pytest-homeassistant-custom-component>=0.13.313",
+]
+
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"

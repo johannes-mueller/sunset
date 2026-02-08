@@ -32,36 +32,42 @@ from .const import (
     MAX_COLOR_TEMP_KELVIN,
 )
 
+from homeassistant.helpers.device_registry import DeviceRegistry, DeviceInfo, DeviceEntryType
+from homeassistant.helpers.entity_registry import EntityRegistry
 
-@pytest.fixture(autouse=True)
-def cleanup(event_loop):
-    yield
-    for handle in event_loop._scheduled:
-        if not handle.cancelled():
-            handle.cancel()
+
+from homeassistant.config_entries import ConfigEntry
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 
 @pytest.fixture
-async def lights(hass):
+async def config_entry(hass: HA.HomeAssistant, device_registry: DeviceRegistry) -> ConfigEntry:
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+
+    return config_entry
+
+
+@pytest.fixture
+async def lights(hass: HA.HomeAssistant, entity_registry: EntityRegistry, device_registry: DeviceRegistry, config_entry: ConfigEntry):
     """Provide lights 'light.light_1' and 'light.light_2'."""
-    await make_lights(hass, ['light_1', 'light_2'], area_name="area_1")
+    return await make_lights(hass, entity_registry, device_registry, config_entry, ['light_1', 'light_2'], area_name="area_1")
 
 
 @pytest.fixture
-async def more_lights(hass, lights):
+async def more_lights(hass, entity_registry, device_registry, config_entry, lights):
     """Provide lights 'light.light_3' and 'light.light_4'."""
-    await make_lights(hass, ['light_3', 'light_4'], area_name="area_2")
-
-
-
-@pytest.fixture
-async def bw_light(hass):
-    await make_lights(hass, ['bwlight_1'], area_name="foo_area")
+    await make_lights(hass, entity_registry, device_registry, config_entry, ['light_3', 'light_4'], area_name="area_2")
 
 
 @pytest.fixture
-async def dim_light(hass):
-    await make_lights(hass, ['dimlight_1'], area_name="foo_area")
+async def bw_light(hass, entity_registry, device_registry, config_entry):
+    await make_lights(hass, entity_registry, device_registry, config_entry, ['bwlight_1'], area_name="foo_area")
+
+
+@pytest.fixture
+async def dim_light(hass, entity_registry, device_registry, config_entry):
+    await make_lights(hass, entity_registry, device_registry, config_entry, ['dimlight_1'], area_name="foo_area")
 
 
 
