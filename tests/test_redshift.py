@@ -757,10 +757,11 @@ async def test_redshift_dont_touch_entity_id_not_as_list(
     await hass.services.async_call(
         "sunset", "dont_touch", {ATTR_ENTITY_ID: "some_stupidity"},
     )
+    await hass.async_block_till_done()
+
     await hass.services.async_call(
         "sunset", "handle_again", {ATTR_ENTITY_ID: "some_stupidity"},
     )
-
     await hass.async_block_till_done()
 
     assert not any(r.levelname == "WARNING" for r in caplog.records)
