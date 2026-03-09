@@ -11,9 +11,7 @@ from homeassistant.components.light import (
     ATTR_MAX_COLOR_TEMP_KELVIN,
     ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_SUPPORTED_COLOR_MODES,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_ONOFF,
-    COLOR_MODE_XY,
+    ColorMode,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -126,7 +124,7 @@ def turn_on_service(hass):
                 brightness = last_state.get(ATTR_BRIGHTNESS)
 
         color_tmp_attrs = {
-            ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_COLOR_TEMP, COLOR_MODE_XY],
+            ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP, ColorMode.XY],
             ATTR_COLOR_TEMP_KELVIN: actual_color_temp,
             ATTR_MIN_COLOR_TEMP_KELVIN: MIN_COLOR_TEMP_KELVIN,
             ATTR_MAX_COLOR_TEMP_KELVIN: MAX_COLOR_TEMP_KELVIN,
@@ -134,7 +132,7 @@ def turn_on_service(hass):
         }
 
         bw_attrs = {
-            ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_ONOFF],
+            ATTR_SUPPORTED_COLOR_MODES: [ColorMode.ONOFF],
             ATTR_BRIGHTNESS: brightness,
         }
 

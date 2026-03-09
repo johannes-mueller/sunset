@@ -10,8 +10,8 @@ from homeassistant.components.light import (
     ATTR_MAX_COLOR_TEMP_KELVIN,
     ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_SUPPORTED_COLOR_MODES,
-    COLOR_MODE_COLOR_TEMP,
     COLOR_MODES_BRIGHTNESS,
+    ColorMode
 )
 from homeassistant.const import (
     ATTR_AREA_ID,
@@ -77,7 +77,7 @@ async def async_setup(hass: HA.HomeAssistant, config: ConfigType) -> bool:
 
     def is_not_color_temp_light(lgt: str) -> bool:
         supported_modes = hass.states.get(lgt).attributes[ATTR_SUPPORTED_COLOR_MODES]
-        return COLOR_MODE_COLOR_TEMP not in supported_modes
+        return ColorMode.COLOR_TEMP not in supported_modes
 
     def is_not_dimmable_light(lgt: str) -> bool:
         supported_modes = hass.states.get(lgt).attributes[ATTR_SUPPORTED_COLOR_MODES]

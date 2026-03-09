@@ -10,9 +10,7 @@ from homeassistant.components.light import (
     ATTR_MAX_COLOR_TEMP_KELVIN,
     ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_SUPPORTED_COLOR_MODES,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_ONOFF,
+    ColorMode
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -38,16 +36,16 @@ async def turn_on_lights(hass, lights, color_temp=None, brightness=None):
     """Turn on `lights`."""
     brightness = brightness or 254
     color_temp_attrs = {
-        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_COLOR_TEMP, COLOR_MODE_BRIGHTNESS],
+        ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP, ColorMode.BRIGHTNESS],
         ATTR_MIN_COLOR_TEMP_KELVIN: MIN_COLOR_TEMP_KELVIN,
         ATTR_MAX_COLOR_TEMP_KELVIN: MAX_COLOR_TEMP_KELVIN,
         ATTR_BRIGHTNESS: brightness,
     }
     bw_attrs = {
-        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_ONOFF],
+        ATTR_SUPPORTED_COLOR_MODES: [ColorMode.ONOFF],
     }
     dim_attrs = {
-        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_BRIGHTNESS],
+        ATTR_SUPPORTED_COLOR_MODES: [ColorMode.BRIGHTNESS],
         ATTR_BRIGHTNESS: brightness,
     }
     for lgt in lights:

@@ -6,7 +6,7 @@ from homeassistant.components.light import (
     ATTR_COLOR_NAME,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_SUPPORTED_COLOR_MODES,
-    COLOR_MODE_COLOR_TEMP,
+    ColorMode,
 )
 from homeassistant.const import (
     ATTR_AREA_ID,
@@ -156,7 +156,7 @@ async def test_light_goes_on_while_inactive(
 
     attrs = {
         ATTR_COLOR_TEMP_KELVIN: 390,
-        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_COLOR_TEMP],
+        ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP],
         ATTR_BRIGHTNESS: 254,
     }
     attrs.update(MINMAX_COLOR_TEMP_KELVIN)
@@ -307,7 +307,7 @@ async def test_service_turn_on_call_four_lights_3_override_color_temp(
 
     attrs = {
         ATTR_COLOR_TEMP_KELVIN: 390,
-        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_COLOR_TEMP],
+        ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP],
     }
     hass.states.async_set("light.light_3", STATE_ON, attributes=attrs)
     start_at_noon.tick(600)
@@ -427,7 +427,7 @@ async def test_redshift_light_in_color(
 
     attrs = {
         ATTR_COLOR_NAME: "green",
-        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_COLOR_TEMP],
+        ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP],
     }
     attrs.update(MINMAX_COLOR_TEMP_KELVIN)
     hass.states.async_set("light.light_1", STATE_ON, attrs)

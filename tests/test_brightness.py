@@ -2,7 +2,7 @@
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_SUPPORTED_COLOR_MODES,
-    COLOR_MODE_BRIGHTNESS,
+    ColorMode
 )
 from homeassistant.const import STATE_ON
 
@@ -138,7 +138,7 @@ async def test_day_to_night_changed_brightness_no_bed_time(
 ):
     assert await async_setup(hass, {DOMAIN: {"bed_time": "null"}})
     attrs = {
-        ATTR_SUPPORTED_COLOR_MODES: [COLOR_MODE_BRIGHTNESS],
+        ATTR_SUPPORTED_COLOR_MODES: [ColorMode.BRIGHTNESS],
         ATTR_BRIGHTNESS: 192,
     }
     hass.states.async_set("light.light_1", STATE_ON, attrs)
