@@ -1,4 +1,3 @@
-
 DOMAIN = "sunset"
 
 MIN_COLOR_TEMP_KELVIN = 2500

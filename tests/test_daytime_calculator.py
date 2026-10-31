@@ -11,12 +11,15 @@ def test_setup_brightness_calculator():
     )
 
 
-@pytest.mark.parametrize(("now_time", "expected"), [
-    ("12:00", False),
-    ("23:30", True),
-    ("02:00", True),
-    ("07:00", False),
-])
+@pytest.mark.parametrize(
+    ("now_time", "expected"),
+    [
+        ("12:00", False),
+        ("23:30", True),
+        ("02:00", True),
+        ("07:00", False),
+    ],
+)
 def test_is_night_23_06(now_time, expected):
     calculator = DaytimeCalculator(
         night_time="23:00",
@@ -27,13 +30,16 @@ def test_is_night_23_06(now_time, expected):
         assert calculator.is_night() == expected
 
 
-@pytest.mark.parametrize(("now_time", "expected"), [
-    ("12:00", False),
-    ("23:30", False),
-    ("00:30", False),
-    ("02:00", True),
-    ("07:00", False),
-])
+@pytest.mark.parametrize(
+    ("now_time", "expected"),
+    [
+        ("12:00", False),
+        ("23:30", False),
+        ("00:30", False),
+        ("02:00", True),
+        ("07:00", False),
+    ],
+)
 def test_is_night_01_06(now_time, expected):
     calculator = DaytimeCalculator(
         night_time="01:00",

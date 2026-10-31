@@ -1,6 +1,6 @@
 """Common functions for test suite."""
 
-import datetime as DT
+import datetime as dt
 import logging
 from typing import TYPE_CHECKING
 
@@ -10,9 +10,8 @@ from homeassistant.components.light import (
     ATTR_MAX_COLOR_TEMP_KELVIN,
     ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_SUPPORTED_COLOR_MODES,
-    ColorMode
+    ColorMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from pytest_homeassistant_custom_component.common import (
     MockEntity,
@@ -26,6 +25,7 @@ from .const import (
 )
 
 if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
     from homeassistant.helpers.device_registry import DeviceRegistry
     from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -49,7 +49,7 @@ async def turn_on_lights(hass, lights, color_temp=None, brightness=None):
         ATTR_BRIGHTNESS: brightness,
     }
     for lgt in lights:
-        state = hass.states.get("light."+lgt)
+        state = hass.states.get("light." + lgt)
         color_temp = color_temp or _color_temp_of_state(state) or 2630
         if lgt.startswith("bw"):
             attrs = bw_attrs
@@ -59,7 +59,7 @@ async def turn_on_lights(hass, lights, color_temp=None, brightness=None):
             attrs = color_temp_attrs
             attrs[ATTR_COLOR_TEMP_KELVIN] = color_temp
 
-        hass.states.async_set("light."+lgt, STATE_ON, attrs)
+        hass.states.async_set("light." + lgt, STATE_ON, attrs)
 
 
 async def make_lights(
@@ -79,7 +79,12 @@ async def make_lights(
         )
 
         entity_entry = entity_registry.async_get_or_create(
-            "light", "", light, device_id=device.id, suggested_object_id=light, original_name=light
+            "light",
+            "",
+            light,
+            device_id=device.id,
+            suggested_object_id=light,
+            original_name=light,
         )
         entity_id = entity_entry.entity_id
 
@@ -90,18 +95,20 @@ async def make_lights(
 
     entities = [_make_light(hass, lgt) for lgt in lights]
 
-
-
     for lgt in lights:
-        hass.states.async_set("light."+lgt, STATE_OFF, attributes=MINMAX_COLOR_TEMP_KELVIN)
+        hass.states.async_set(
+            "light." + lgt, STATE_OFF, attributes=MINMAX_COLOR_TEMP_KELVIN
+        )
 
     return [entity_registry.async_get(entity.entity_id) for entity in entities]
 
 
 def _time_forward(time_string):
-    target_time = DT.datetime.combine(DT.datetime.today(), DT.time.fromisoformat(time_string))
-    if target_time < DT.datetime.now():
-        target_time += DT.timedelta(days=1)
+    target_time = dt.datetime.combine(
+        dt.datetime.today(), dt.time.fromisoformat(time_string)
+    )
+    if target_time < dt.datetime.now():
+        target_time += dt.timedelta(days=1)
     return target_time
 
 
@@ -118,7 +125,7 @@ def some_night_time():
 
 
 def async_fire_time_changed_now_time(hass):
-    async_fire_time_changed(hass, DT.datetime.now(), fire_all=True)
+    async_fire_time_changed(hass, dt.datetime.now(), fire_all=True)
 
 
 def _color_temp_of_state(state):
