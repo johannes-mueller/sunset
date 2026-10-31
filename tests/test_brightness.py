@@ -1,8 +1,7 @@
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_SUPPORTED_COLOR_MODES,
-    ColorMode
+    ColorMode,
 )
 from homeassistant.const import STATE_ON
 
@@ -19,10 +18,10 @@ from .const import DOMAIN
 
 
 async def test_service_active_no_change(
-        hass,
-        lights,
-        turn_on_service,
-        start_at_noon,
+    hass,
+    lights,
+    turn_on_service,
+    start_at_noon,
 ):
     assert await async_setup(hass, {DOMAIN: {}})
 
@@ -39,10 +38,10 @@ async def test_service_active_no_change(
 
 
 async def test_service_active_no_change_two_lights(
-        hass,
-        lights,
-        turn_on_service,
-        start_at_noon,
+    hass,
+    lights,
+    turn_on_service,
+    start_at_noon,
 ):
     assert await async_setup(hass, {DOMAIN: {}})
 
@@ -56,10 +55,10 @@ async def test_service_active_no_change_two_lights(
 
 
 async def test_day_to_night(
-        hass,
-        lights,
-        turn_on_service,
-        start_at_noon,
+    hass,
+    lights,
+    turn_on_service,
+    start_at_noon,
 ):
     assert await async_setup(hass, {DOMAIN: {}})
     await turn_on_lights(hass, ["light_1"])
@@ -81,10 +80,10 @@ async def test_day_to_night(
 
 
 async def test_day_to_night_alternative_night_brightness(
-        hass,
-        lights,
-        turn_on_service,
-        start_at_noon,
+    hass,
+    lights,
+    turn_on_service,
+    start_at_noon,
 ):
     assert await async_setup(hass, {DOMAIN: {"night_brightness": 192}})
     await turn_on_lights(hass, ["light_1"])
@@ -106,10 +105,10 @@ async def test_day_to_night_alternative_night_brightness(
 
 
 async def test_day_to_night_no_bed_time(
-        hass,
-        lights,
-        turn_on_service,
-        start_at_noon,
+    hass,
+    lights,
+    turn_on_service,
+    start_at_noon,
 ):
     assert await async_setup(hass, {DOMAIN: {"bed_time": "null"}})
     await turn_on_lights(hass, ["light_1"])
@@ -131,10 +130,10 @@ async def test_day_to_night_no_bed_time(
 
 
 async def test_day_to_night_changed_brightness_no_bed_time(
-        hass,
-        lights,
-        turn_on_service,
-        start_at_noon,
+    hass,
+    lights,
+    turn_on_service,
+    start_at_noon,
 ):
     assert await async_setup(hass, {DOMAIN: {"bed_time": "null"}})
     attrs = {
@@ -151,10 +150,10 @@ async def test_day_to_night_changed_brightness_no_bed_time(
 
 
 async def test_night_to_day(
-        hass,
-        lights,
-        turn_on_service,
-        start_at_night,
+    hass,
+    lights,
+    turn_on_service,
+    start_at_night,
 ):
     assert await async_setup(hass, {DOMAIN: {}})
 
@@ -177,10 +176,10 @@ async def test_night_to_day(
 
 
 async def test_day_to_night_sunset_inactive(
-        hass,
-        lights,
-        turn_on_service,
-        start_at_noon,
+    hass,
+    lights,
+    turn_on_service,
+    start_at_noon,
 ):
     assert await async_setup(hass, {DOMAIN: {}})
 
@@ -204,15 +203,17 @@ async def test_day_to_night_sunset_inactive(
 
 
 async def test_brightness_deactivate_with_brightness(
-        hass,
-        lights,
-        turn_on_service,
-        start_at_noon,
+    hass,
+    lights,
+    turn_on_service,
+    start_at_noon,
 ):
     assert await async_setup(hass, {DOMAIN: {}})
 
     await turn_on_lights(hass, ["light_1", "light_2"])
-    await hass.services.async_call("sunset", "deactivate_brightness", {"brightness": 192})
+    await hass.services.async_call(
+        "sunset", "deactivate_brightness", {"brightness": 192}
+    )
     await hass.async_block_till_done()
 
     assert hass.states.get("sunset.brightness_active").state == "False"
@@ -228,10 +229,10 @@ async def test_brightness_deactivate_with_brightness(
 
 
 async def test_brightness_deactivate_no_brightness(
-        hass,
-        lights,
-        turn_on_service,
-        start_at_noon,
+    hass,
+    lights,
+    turn_on_service,
+    start_at_noon,
 ):
     assert await async_setup(hass, {DOMAIN: {}})
 
@@ -245,10 +246,10 @@ async def test_brightness_deactivate_no_brightness(
 
 
 async def test_day_to_night_brightness_inactive_active(
-        hass,
-        lights,
-        turn_on_service,
-        start_at_noon,
+    hass,
+    lights,
+    turn_on_service,
+    start_at_noon,
 ):
     assert await async_setup(hass, {DOMAIN: {}})
     hass.states.async_set("sunset.brightness_active", False)
@@ -283,10 +284,10 @@ async def test_day_to_night_brightness_inactive_active(
 
 
 async def test_override_brightness_do_not_touch_night(
-        hass,
-        lights,
-        turn_on_service,
-        start_at_noon,
+    hass,
+    lights,
+    turn_on_service,
+    start_at_noon,
 ):
     assert await async_setup(hass, {DOMAIN: {}})
 
@@ -311,10 +312,10 @@ async def test_override_brightness_do_not_touch_night(
 
 
 async def test_override_brightness_do_not_touch_evening(
-        hass,
-        lights,
-        turn_on_service,
-        start_at_noon,
+    hass,
+    lights,
+    turn_on_service,
+    start_at_noon,
 ):
     assert await async_setup(hass, {DOMAIN: {}})
 
@@ -341,10 +342,10 @@ async def test_override_brightness_do_not_touch_evening(
 
 
 async def test_override_color_temp_do_touch(
-        hass,
-        lights,
-        turn_on_service,
-        start_at_noon,
+    hass,
+    lights,
+    turn_on_service,
+    start_at_noon,
 ):
     assert await async_setup(hass, {DOMAIN: {}})
 
@@ -372,10 +373,10 @@ async def test_override_color_temp_do_touch(
 
 
 async def test_override_while_active_then_reactivate(
-        hass,
-        lights,
-        turn_on_service,
-        start_at_noon,
+    hass,
+    lights,
+    turn_on_service,
+    start_at_noon,
 ):
     assert await async_setup(hass, {DOMAIN: {}})
 
@@ -416,10 +417,10 @@ async def test_override_while_active_then_reactivate(
 
 
 async def test_brightness_bwlight(
-        hass,
-        bw_light,
-        turn_on_service,
-        start_at_noon,
+    hass,
+    bw_light,
+    turn_on_service,
+    start_at_noon,
 ):
     assert await async_setup(hass, {DOMAIN: {}})
 
@@ -434,10 +435,10 @@ async def test_brightness_bwlight(
 
 
 async def test_brightness_dimlight(
-        hass,
-        dim_light,
-        turn_on_service,
-        start_at_noon,
+    hass,
+    dim_light,
+    turn_on_service,
+    start_at_noon,
 ):
     assert await async_setup(hass, {DOMAIN: {}})
 
@@ -452,15 +453,17 @@ async def test_brightness_dimlight(
 
 
 async def test_brightness_go_brightness(
-        hass,
-        lights,
-        turn_on_service,
-        start_at_noon,
+    hass,
+    lights,
+    turn_on_service,
+    start_at_noon,
 ):
     assert await async_setup(hass, {DOMAIN: {}})
 
     await turn_on_lights(hass, ["light_1", "light_2"])
-    await hass.services.async_call("sunset", "deactivate_brightness", {"brightness": 192})
+    await hass.services.async_call(
+        "sunset", "deactivate_brightness", {"brightness": 192}
+    )
     await hass.async_block_till_done()
     assert hass.states.get("sunset.brightness_active").state == "False"
 
@@ -474,10 +477,10 @@ async def test_brightness_go_brightness(
 
 
 async def test_manual_brightness_not_intervened_by_redshift(
-        hass,
-        lights,
-        turn_on_service,
-        start_at_noon,
+    hass,
+    lights,
+    turn_on_service,
+    start_at_noon,
 ):
     assert await async_setup(hass, {DOMAIN: {}})
 

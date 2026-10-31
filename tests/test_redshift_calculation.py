@@ -1,5 +1,3 @@
-
-
 import freezegun as FG
 import pytest
 
@@ -70,13 +68,16 @@ def test_redshift_value_nighttime_change_after_midnight():
         assert calculator.color_temp() == 2500
 
 
-@pytest.mark.parametrize(("time", "expected"), [
-    ("20:00", 4500),
-    ("19:00", 5000),
-    ("21:00", 4000),
-    ("17:00", 6000),
-    ("23:00", 3000),
-])
+@pytest.mark.parametrize(
+    ("time", "expected"),
+    [
+        ("20:00", 4500),
+        ("19:00", 5000),
+        ("21:00", 4000),
+        ("17:00", 6000),
+        ("23:00", 3000),
+    ],
+)
 def test_redshift_value_evening_time(time, expected):
     calculator = RedshiftCalculator(
         evening_time="17:00",
@@ -89,11 +90,14 @@ def test_redshift_value_evening_time(time, expected):
         assert calculator.color_temp() == expected
 
 
-@pytest.mark.parametrize(("evening", "night", "now"), [
-    ("23:00", "01:00", "00:00"),
-    ("21:00", "01:00", "23:00"),
-    ("23:00", "03:00", "01:00"),
-])
+@pytest.mark.parametrize(
+    ("evening", "night", "now"),
+    [
+        ("23:00", "01:00", "00:00"),
+        ("21:00", "01:00", "23:00"),
+        ("23:00", "03:00", "01:00"),
+    ],
+)
 def test_redshift_value_evening_time_after_midnight(evening, night, now):
     calculator = RedshiftCalculator(
         evening_time=evening,

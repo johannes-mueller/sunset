@@ -1,6 +1,8 @@
-import datetime as DT
+"""Sunset integration for Home Assistant."""
+
+import datetime as dt
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import homeassistant.core as HA
 import homeassistant.helpers.event as EV
@@ -11,7 +13,7 @@ from homeassistant.components.light import (
     ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_SUPPORTED_COLOR_MODES,
     COLOR_MODES_BRIGHTNESS,
-    ColorMode
+    ColorMode,
 )
 from homeassistant.const import (
     ATTR_AREA_ID,
@@ -19,9 +21,9 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_ON,
     STATE_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.helpers import entity_registry
-from PIL.GifImagePlugin import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -37,18 +39,23 @@ _LOGGER = logging.getLogger("sunset")
 
 
 async def async_setup(hass: HA.HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Sunset integration."""
 
     def redshift_inactive() -> bool:
-        return hass.states.get(DOMAIN+".redshift_active").state != "True"
+        state = hass.states.get(DOMAIN + ".redshift_active")
+        return state is None or state.state != "True"
 
     def brightness_inactive() -> bool:
-        return hass.states.get(DOMAIN+".brightness_active").state != "True"
+        state = hass.states.get(DOMAIN + ".brightness_active")
+        return state is None or state.state != "True"
 
     def fetch_light_states() -> dict[str, HA.State]:
-        return {
-            lgt: hass.states.get(lgt) for lgt in hass.states.async_entity_ids("light")
-            if hass.states.get(lgt).state == STATE_ON
-        }
+        states: dict[str, HA.State] = {}
+        for lgt in hass.states.async_entity_ids("light"):
+            state = hass.states.get(lgt)
+            if state is not None and state.state == STATE_ON:
+                states[lgt] = state
+        return states
 
     def current_target_color_temp() -> int:
         return manual_color_temp or round(redshift_calculator.color_temp())
@@ -75,16 +82,18 @@ async def async_setup(hass: HA.HomeAssistant, config: ConfigType) -> bool:
             lgt: state for lgt, state in known_states.items() if lgt in current_states
         }
 
-    def is_not_color_temp_light(lgt: str) -> bool:
-        supported_modes = hass.states.get(lgt).attributes[ATTR_SUPPORTED_COLOR_MODES]
+    def is_not_color_temp_light(state: HA.State) -> bool:
+        supported_modes = state.attributes.get(ATTR_SUPPORTED_COLOR_MODES, [])
         return ColorMode.COLOR_TEMP not in supported_modes
 
-    def is_not_dimmable_light(lgt: str) -> bool:
-        supported_modes = hass.states.get(lgt).attributes[ATTR_SUPPORTED_COLOR_MODES]
+    def is_not_dimmable_light(state: HA.State) -> bool:
+        supported_modes = state.attributes.get(ATTR_SUPPORTED_COLOR_MODES, [])
         return COLOR_MODES_BRIGHTNESS.isdisjoint(supported_modes)
 
     def new_color_temp_state(
-        lgt: str, known_state: HA.State | None, current_state: HA.State,
+        lgt: str,
+        known_state: HA.State | None,
+        current_state: HA.State,
     ) -> dict[str, Any]:
         known_color_temp = _color_temp_mired_of_state(known_state)
         current_color_temp = _color_temp_mired_of_state(current_state)
@@ -94,15 +103,14 @@ async def async_setup(hass: HA.HomeAssistant, config: ConfigType) -> bool:
             known_color_temp != current_color_temp
         )
 
-        if is_not_color_temp_light(lgt):
+        if is_not_color_temp_light(current_state):
             return {}
 
         if somebody_changed_color_temp_since_last_time and light_was_on_before:
             return {}
 
-        state = hass.states.get(lgt)
-        color_temp = color_temp_in_limits(state)
-        current_color_temp_mired = _color_temp_mired_of_state(state)
+        color_temp = color_temp_in_limits(current_state)
+        current_color_temp_mired = _color_temp_mired_of_state(current_state)
 
         if redshift_inactive() or int(1e6 / color_temp) == current_color_temp_mired:
             return {}
@@ -112,7 +120,9 @@ async def async_setup(hass: HA.HomeAssistant, config: ConfigType) -> bool:
         return {ATTR_COLOR_TEMP_KELVIN: color_temp}
 
     def new_brightness_state(
-        lgt: str, known_state: HA.State | None, current_state: HA.State,
+        lgt: str,
+        known_state: HA.State | None,
+        current_state: HA.State,
     ) -> dict[str, Any]:
         known_brightness = _brightness_of_state(known_state)
         current_brightness = _brightness_of_state(current_state)
@@ -122,7 +132,7 @@ async def async_setup(hass: HA.HomeAssistant, config: ConfigType) -> bool:
             known_brightness != current_brightness
         )
 
-        if is_not_dimmable_light(lgt):
+        if is_not_dimmable_light(current_state):
             return {}
 
         if somebody_changed_brightness_since_last_time and light_was_on_before:
@@ -148,7 +158,9 @@ async def async_setup(hass: HA.HomeAssistant, config: ConfigType) -> bool:
         known_state = known_states.get(lgt)
 
         attrs = new_color_temp_state(
-            lgt, known_state, current_state,
+            lgt,
+            known_state,
+            current_state,
         ) | new_brightness_state(lgt, known_state, current_state)
 
         if attrs:
@@ -159,15 +171,25 @@ async def async_setup(hass: HA.HomeAssistant, config: ConfigType) -> bool:
                 if key in current_attrs
             } | {ATTR_ENTITY_ID: lgt}
             call_attrs.update(attrs)
-            known_attributes = known_state.attributes if known_state is not None else current_state.attributes
+            known_attributes = (
+                known_state.attributes
+                if known_state is not None
+                else current_state.attributes
+            )
             known_states[lgt] = HA.State(lgt, STATE_ON, known_attributes | attrs)
             await hass.services.async_call("light", SERVICE_TURN_ON, call_attrs)
 
-    async def timer_event(_: DT.datetime | None) -> None:
+    async def timer_event(_: dt.datetime | None) -> None:
         nonlocal known_states
 
-        hass.states.async_set(DOMAIN + ".color_temp_kelvin", current_target_color_temp())
-        hass.states.async_set(DOMAIN + ".brightness", new_brightness())
+        hass.states.async_set(
+            DOMAIN + ".color_temp_kelvin", str(current_target_color_temp())
+        )
+        brightness = new_brightness()
+        hass.states.async_set(
+            DOMAIN + ".brightness",
+            STATE_UNKNOWN if brightness is None else str(brightness),
+        )
 
         current_states = fetch_light_states()
         known_states = forget_off_lights(current_states)
@@ -175,24 +197,25 @@ async def async_setup(hass: HA.HomeAssistant, config: ConfigType) -> bool:
         for lgt, current_state in current_states.items():
             await maybe_apply_new_state(lgt, current_state)
 
-    def dont_touch(event: HA.Event) -> None:
+    async def dont_touch(event: HA.ServiceCall) -> None:
         for entity_id in entity_ids_from_event(event):
             lights_not_to_touch.add(entity_id)
 
-    def handle_again(event: HA.Event) -> None:
+    async def handle_again(event: HA.ServiceCall) -> None:
         for entity_id in entity_ids_from_event(event):
             if entity_id not in lights_not_to_touch:
                 _LOGGER.warning("Unknown entity_id: %s", entity_id)
                 continue
             lights_not_to_touch.remove(entity_id)
 
-    def entity_ids_from_event(event: HA.Event) -> Generator[str]:
+    def entity_ids_from_event(event: HA.ServiceCall) -> Generator[str]:
         entity_reg = entity_registry.async_get(hass)
 
         device_id = event.data.get(ATTR_DEVICE_ID)
         if device_id is not None:
             for entry in entity_registry.async_entries_for_device(
-                entity_reg, device_id,
+                entity_reg,
+                device_id,
             ):
                 yield entry.entity_id
 
@@ -207,33 +230,32 @@ async def async_setup(hass: HA.HomeAssistant, config: ConfigType) -> bool:
 
         yield from entity_ids
 
-    async def deactivate_redshift(event: HA.Event) -> None:
+    async def deactivate_redshift(event: HA.ServiceCall) -> None:
         nonlocal manual_color_temp
         manual_color_temp = event.data.get("color_temp")
 
         if manual_color_temp is not None:
             await timer_event(None)
 
-        states = hass.states
-        hass.states.async_set(DOMAIN + ".redshift_active", False)
+        hass.states.async_set(DOMAIN + ".redshift_active", str(False))
 
-    async def activate_redshift(_: HA.Event) -> None:
+    async def activate_redshift(_: HA.ServiceCall) -> None:
         nonlocal manual_color_temp
         manual_color_temp = None
-        hass.states.async_set(DOMAIN + ".redshift_active", True)
+        hass.states.async_set(DOMAIN + ".redshift_active", str(True))
         await timer_event(None)
 
-    async def deactivate_brightness(event: HA.Event) -> None:
+    async def deactivate_brightness(event: HA.ServiceCall) -> None:
         nonlocal manual_brightness
         manual_brightness = event.data.get("brightness")
         if manual_brightness is not None:
             await timer_event(None)
-        hass.states.async_set(DOMAIN + ".brightness_active", False)
+        hass.states.async_set(DOMAIN + ".brightness_active", str(False))
 
-    async def activate_brightness(event) -> None:
+    async def activate_brightness(_event: HA.ServiceCall) -> None:
         nonlocal manual_brightness
         manual_brightness = None
-        hass.states.async_set(DOMAIN + ".brightness_active", True)
+        hass.states.async_set(DOMAIN + ".brightness_active", str(True))
         await timer_event(None)
 
     def finalized_config() -> dict[str, Any]:
@@ -282,13 +304,21 @@ async def async_setup(hass: HA.HomeAssistant, config: ConfigType) -> bool:
     hass.services.async_register(DOMAIN, "activate_brightness", activate_brightness)
     hass.services.async_register(DOMAIN, "deactivate_brightness", deactivate_brightness)
 
-    hass.states.async_set(DOMAIN + ".redshift_active", True)
-    hass.states.async_set(DOMAIN + ".brightness_active", True)
+    hass.states.async_set(DOMAIN + ".redshift_active", str(True))
+    hass.states.async_set(DOMAIN + ".brightness_active", str(True))
 
-    hass.states.async_set(DOMAIN + ".color_temp_kelvin", current_target_color_temp())
-    hass.states.async_set(DOMAIN + ".brightness", new_brightness())
+    hass.states.async_set(
+        DOMAIN + ".color_temp_kelvin", str(current_target_color_temp())
+    )
+    initial_brightness = new_brightness()
+    hass.states.async_set(
+        DOMAIN + ".brightness",
+        STATE_UNKNOWN if initial_brightness is None else str(initial_brightness),
+    )
 
-    EV.async_track_time_interval(hass, timer_event, DT.timedelta(seconds=1))
+    EV.async_track_time_interval(
+        hass, timer_event, dt.timedelta(seconds=1), cancel_on_shutdown=True
+    )
 
     return True
 

@@ -35,8 +35,16 @@ if TYPE_CHECKING:
     from homeassistant.helpers.entity_registry import EntityRegistry
 
 
+@pytest.fixture(autouse=True)
+def auto_enable_custom_integrations(enable_custom_integrations):
+    """Enable custom integrations for every test."""
+    return enable_custom_integrations
+
+
 @pytest.fixture
-async def config_entry(hass: HA.HomeAssistant, device_registry: DeviceRegistry) -> ConfigEntry:
+async def config_entry(
+    hass: HA.HomeAssistant, device_registry: DeviceRegistry
+) -> ConfigEntry:
     config_entry = MockConfigEntry(domain="light")
     config_entry.add_to_hass(hass)
 
@@ -44,7 +52,12 @@ async def config_entry(hass: HA.HomeAssistant, device_registry: DeviceRegistry) 
 
 
 @pytest.fixture
-async def lights(hass: HA.HomeAssistant, entity_registry: EntityRegistry, device_registry: DeviceRegistry, config_entry: ConfigEntry):
+async def lights(
+    hass: HA.HomeAssistant,
+    entity_registry: EntityRegistry,
+    device_registry: DeviceRegistry,
+    config_entry: ConfigEntry,
+):
     """Provide lights "light.light_1" and "light.light_2"."""
     return await make_lights(
         hass,
@@ -93,7 +106,6 @@ async def dim_light(hass, entity_registry, device_registry, config_entry):
     )
 
 
-
 @pytest.fixture
 def turn_on_service(hass):
     """Mock SERVICE_TURN_ON for lights."""
@@ -112,8 +124,10 @@ def turn_on_service(hass):
                 color_temp = MAX_COLOR_TEMP_KELVIN
             else:
                 color_temp = last_state.get(ATTR_COLOR_TEMP_KELVIN)
-        color_temp = min(MAX_COLOR_TEMP_KELVIN, max(MIN_COLOR_TEMP_KELVIN, round(color_temp)))
-        actual_color_temp = int(1e6/int(1e6/color_temp))
+        color_temp = min(
+            MAX_COLOR_TEMP_KELVIN, max(MIN_COLOR_TEMP_KELVIN, round(color_temp))
+        )
+        actual_color_temp = int(1e6 / int(1e6 / color_temp))
 
         brightness = call.data.get(ATTR_BRIGHTNESS)
         assert brightness is not None
