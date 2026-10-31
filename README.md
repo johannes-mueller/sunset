@@ -1,4 +1,6 @@
 [![pytest](https://github.com/johannes-mueller/sunset/actions/workflows/pytest.yml/badge.svg)](https://github.com/johannes-mueller/sunset/actions/workflows/pytest.yml)
+[![HACS Action](https://github.com/johannes-mueller/sunset/actions/workflows/hacs.yml/badge.svg)](https://github.com/johannes-mueller/sunset/actions/workflows/hacs.yml)
+[![Hassfest](https://github.com/johannes-mueller/sunset/actions/workflows/hassfest.yml/badge.svg)](https://github.com/johannes-mueller/sunset/actions/workflows/hassfest.yml)
 
 # Sunset
 
@@ -10,8 +12,8 @@ Get yourself accustomed to the evening for better sleep.
 During sunset the sunlight turns more and more reddish.  The reddish light will
 make our body produce hormones that promote sleep.  That's why in offices there
 are usually very hot, i.e. white lights.  At home in the evening a more reddish
-light would be more appropriate.  This extension for
-[Homeassistant](https://home-assistant.io) takes care of that.
+light would be more appropriate.  This integration for
+[Home Assistant](https://home-assistant.io) takes care of that.
 
 
 ## Features
@@ -85,8 +87,8 @@ Similarly you can use the services `sunset.activate_brightness` and
 
 ### Planned features
 
-* Shift the color temperature back in the morning over a defined time.  As of now
-  the back shift to day temperature happens instantaneously.
+* Shift the color temperature back in the morning over a defined time.  As of
+  now the back shift to day temperature happens instantaneously.
 
 * Configure lights that are generally ignored by Sunset.
 
@@ -95,17 +97,31 @@ No ETAs given.
 
 ## Status
 
-Hacked it like a couple of months ago and deployed it on my system.  So far it seems to
-work fine.
+Sunset is usable, but it is still under active development.  The integration
+currently uses YAML configuration; a config flow is planned.
 
 
 ## Installation
 
-For now you need to clone the repo and copy or symlink the directory
-`custom_components/sunset` to your `.homeassistant/custom_components`.  When
-restarting Sunset should automatically step in.
+### HACS
+
+1. Make sure [HACS](https://hacs.xyz) is installed.
+2. Add this repository as a custom repository of type **Integration**.
+3. Install **Sunset** from HACS.
+4. Add the configuration to your `configuration.yaml` and restart Home
+   Assistant.
+
+### Manual installation
+
+Copy or symlink the directory `custom_components/sunset` into your
+`.homeassistant/custom_components` directory, then restart Home Assistant.
+
+## Development
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the development setup, test-driven
+development workflow, and the 100% branch coverage requirement.
 
 
 ## Support
 
-As always, bug reports and pull requests welcome.
+As always, bug reports and pull requests are welcome.
