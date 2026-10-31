@@ -16,10 +16,9 @@ from homeassistant.const import (
     STATE_ON,
 )
 
-from custom_components.sunset import async_setup
-
 from .common import (
     async_fire_time_changed_now_time,
+    async_setup,
     some_day_time,
     some_evening_time,
     some_night_time,
@@ -720,11 +719,11 @@ async def test_redshift_handle_again_key_error(
     await hass.async_block_till_done()
 
     assert not any(r.levelname == "ERROR" for r in caplog.records)
-    assert sum(1 for r in caplog.records if r.levelname == "WARNING") == 1
-    assert any(
-        r.levelname == "WARNING" and r.message == "Unknown entity_id: some_stupidity"
-        for r in caplog.records
-    )
+    warnings = [
+        r for r in caplog.records if r.levelname == "WARNING" and r.name == "sunset"
+    ]
+    assert len(warnings) == 1
+    assert warnings[0].message == "Unknown entity_id: some_stupidity"
 
     caplog.clear()
 
@@ -736,11 +735,11 @@ async def test_redshift_handle_again_key_error(
     )
     await hass.async_block_till_done()
 
-    assert sum(1 for r in caplog.records if r.levelname == "WARNING") == 1
-    assert any(
-        r.levelname == "WARNING" and r.message == "Unknown entity_id: another_stupidity"
-        for r in caplog.records
-    )
+    warnings = [
+        r for r in caplog.records if r.levelname == "WARNING" and r.name == "sunset"
+    ]
+    assert len(warnings) == 1
+    assert warnings[0].message == "Unknown entity_id: another_stupidity"
 
 
 async def test_redshift_handle_again_no_key_error(
@@ -788,7 +787,9 @@ async def test_redshift_dont_touch_entity_id_not_as_list(
     )
     await hass.async_block_till_done()
 
-    assert not any(r.levelname == "WARNING" for r in caplog.records)
+    assert not any(
+        r.levelname == "WARNING" and r.name == "sunset" for r in caplog.records
+    )
 
 
 async def test_redshift_dont_touch_devices(

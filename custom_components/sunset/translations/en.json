@@ -1,0 +1,54 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Sunset",
+        "description": "Configure the evening, night and morning colour temperature schedule.",
+        "data": {
+          "evening_time": "Evening time",
+          "night_time": "Night time",
+          "bed_time": "Bed time",
+          "morning_time": "Morning time",
+          "day_color_temp": "Day colour temperature",
+          "night_color_temp": "Night colour temperature",
+          "night_brightness": "Night brightness",
+          "brightness_enabled": "Dim lights at bed time",
+          "excluded_entities": "Lights Sunset should not control"
+        }
+      },
+      "import": {
+        "title": "Import Sunset configuration",
+        "description": "Import the existing configuration.yaml settings."
+      }
+    },
+    "error": {
+      "invalid_config": "The configuration is invalid."
+    },
+    "abort": {
+      "single_instance_allowed": "Sunset is already configured.",
+      "invalid_config": "The imported configuration is invalid."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure Sunset",
+        "description": "Change the colour temperature schedule or brightness settings.",
+        "data": {
+          "evening_time": "Evening time",
+          "night_time": "Night time",
+          "bed_time": "Bed time",
+          "morning_time": "Morning time",
+          "day_color_temp": "Day colour temperature",
+          "night_color_temp": "Night colour temperature",
+          "night_brightness": "Night brightness",
+          "brightness_enabled": "Dim lights at bed time",
+          "excluded_entities": "Lights Sunset should not control"
+        }
+      }
+    },
+    "error": {
+      "invalid_config": "The configuration is invalid."
+    }
+  }
+}

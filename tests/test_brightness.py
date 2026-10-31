@@ -5,10 +5,9 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import STATE_ON
 
-from custom_components.sunset import async_setup
-
 from .common import (
     async_fire_time_changed_now_time,
+    async_setup,
     some_day_time,
     some_evening_time,
     some_night_time,
