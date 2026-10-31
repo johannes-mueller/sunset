@@ -1,6 +1,7 @@
 {
     "domain": "sunset",
     "name": "Sunset",
+    "categories": ["helpers", "lighting.bulbs_lamps"],
     "codeowners": ["@johannes-mueller"],
     "documentation": "https://github.com/johannes-mueller/sunset/blob/master/README.md",
     "integration_type": "helper",
