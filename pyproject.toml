@@ -11,37 +11,81 @@ dependencies = ["homeassistant"]
 
 [dependency-groups]
 dev = [
+    "freezegun>=1.5.2",
     "homeassistant-stubs>=2026.10.0",
     "pytest>=9.0.0",
+    "pytest-cov>=7.0.0",
     "pytest-homeassistant-custom-component>=0.13.313",
+    "ruff>=0.17.3",
+    "ty==0.0.95",
 ]
-
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+addopts = [
+    "--cov=custom_components/sunset",
+    "--cov-branch",
+    "--cov-report=term-missing",
+    "--strict-markers",
+]
+markers = [
+    "internal: tests that depend on private implementation details",
+]
 
+[tool.coverage.run]
+branch = true
+source = ["custom_components/sunset"]
 
-[too.ruff]
+[tool.coverage.report]
+fail_under = 100
+show_missing = true
+
+[tool.ty.environment]
+python-version = "3.14"
+
+[tool.ruff]
 
 # Same as Black.
 line-length = 88
 indent-width = 4
-
-
 
 [tool.ruff.lint]
 # Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`) codes by default.
 # Unlike Flake8, Ruff doesn't enable pycodestyle warnings (`W`) or
 # McCabe complexity (`C901`) by default.
 select = ["ALL"]
-ignore = ["S101", "ANN001", "N812", "B905"]
+ignore = [
+    "S101",
+    "ANN001",
+    "N812",
+    "B905",
+    "COM812",
+    "CPY001",
+    # These docstring style rules conflict with each other.
+    "D203",
+    "D211",
+    "D212",
+    "D213",
+]
 
-# Allow fix for all enabled rules (when `--fix`) is provided.
+# Allow fix for all enabled rules (when `--fix` is provided).
 fixable = ["ALL"]
 unfixable = []
 
-
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["D", "E402", "ARG001", "ANN201", "ANN202", "PLR2004"]
+"tests/*" = [
+    "D",
+    "E402",
+    "ARG001",
+    "ANN201",
+    "ANN202",
+    "PLR2004",
+    "PLR0913",
+    "PLR0917",
+    "DTZ",
+    "FBT003",
+]
+"custom_components/sunset/__init__.py" = ["C901", "PLR0915", "FBT003"]
+"custom_components/sunset/calculator.py" = ["DTZ"]
