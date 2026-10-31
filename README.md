@@ -18,7 +18,7 @@ light would be more appropriate.  This integration for
 
 ## Features
 
-You can configure three times in your `configuration.yaml`.
+The schedule is configured from the Home Assistant UI.
 
   * `evening_time`: the time when the redshift will start
   * `night_time`: the time when the redshift has reached the final color
@@ -35,9 +35,10 @@ brightness continuously but drops the brightness of all lights at a given
 time.  This is meant to be a soft reminder that it is time for you to go to
 bed.
 
-  * `bed_time`: The time when the brightness should be dropped or 'null' to
-     disable brightness manipulation.
+  * `bed_time`: The time when the brightness should be dropped.  Brightness
+    manipulation can be disabled independently.
   * `night_brightness`: The brightness after bed time (default 127)
+  * `excluded_entities`: Lights Sunset should not control by default
 
 
 ### Color temperature translation behavior
@@ -90,15 +91,12 @@ Similarly you can use the services `sunset.activate_brightness` and
 * Shift the color temperature back in the morning over a defined time.  As of
   now the back shift to day temperature happens instantaneously.
 
-* Configure lights that are generally ignored by Sunset.
-
 No ETAs given.
 
 
 ## Status
 
-Sunset is usable, but it is still under active development.  The integration
-currently uses YAML configuration; a config flow is planned.
+Sunset is usable, but it is still under active development.
 
 
 ## Installation
@@ -108,8 +106,11 @@ currently uses YAML configuration; a config flow is planned.
 1. Make sure [HACS](https://hacs.xyz) is installed.
 2. Add this repository as a custom repository of type **Integration**.
 3. Install **Sunset** from HACS.
-4. Add the configuration to your `configuration.yaml` and restart Home
-   Assistant.
+4. Restart Home Assistant.
+5. Add **Sunset** from **Settings > Devices & services > Add integration**.
+
+Existing `configuration.yaml` settings are imported automatically on the
+first start.  The integration can then be configured and changed from the UI.
 
 ### Manual installation
 
