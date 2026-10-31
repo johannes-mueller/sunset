@@ -79,7 +79,7 @@ async def make_lights(
         )
 
         entity_entry = entity_registry.async_get_or_create(
-            "light", "", light, device_id=device.id
+            "light", "", light, device_id=device.id, suggested_object_id=light, original_name=light
         )
         entity_id = entity_entry.entity_id
 

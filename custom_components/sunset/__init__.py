@@ -288,7 +288,9 @@ async def async_setup(hass: HA.HomeAssistant, config: ConfigType) -> bool:
     hass.states.async_set(DOMAIN + ".color_temp_kelvin", current_target_color_temp())
     hass.states.async_set(DOMAIN + ".brightness", new_brightness())
 
-    EV.async_track_time_interval(hass, timer_event, DT.timedelta(seconds=1))
+    EV.async_track_time_interval(
+        hass, timer_event, DT.timedelta(seconds=1), cancel_on_shutdown=True
+    )
 
     return True
 
