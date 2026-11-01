@@ -182,7 +182,8 @@ async def test_day_to_night_sunset_inactive(
 ):
     assert await async_setup(hass, {DOMAIN: {}})
 
-    hass.states.async_set("sunset.redshift_active", False)
+    await hass.services.async_call("sunset", "deactivate_redshift", {})
+    await hass.async_block_till_done()
 
     await turn_on_lights(hass, ["light_1"])
 
@@ -251,7 +252,9 @@ async def test_day_to_night_brightness_inactive_active(
     start_at_noon,
 ):
     assert await async_setup(hass, {DOMAIN: {}})
-    hass.states.async_set("sunset.brightness_active", False)
+
+    await hass.services.async_call("sunset", "deactivate_brightness", {})
+    await hass.async_block_till_done()
 
     await turn_on_lights(hass, ["light_1"])
 
@@ -270,7 +273,8 @@ async def test_day_to_night_brightness_inactive_active(
     call = turn_on_service.pop()
     assert call.data[ATTR_BRIGHTNESS] == 254
 
-    hass.states.async_set("sunset.brightness_active", True)
+    await hass.services.async_call("sunset", "activate_brightness", {})
+    await hass.async_block_till_done()
 
     start_at_noon.tick(600)
     async_fire_time_changed_now_time(hass)

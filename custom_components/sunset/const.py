@@ -36,6 +36,14 @@ SERVICES = (
     SERVICE_DEACTIVATE_BRIGHTNESS,
 )
 
+# The day/bed-window brightness target. Core lights may report up to
+# 255 (`homeassistant`'s brightness range is 1..255), but some bulbs
+# misbehaved when commanded 255 directly. The value maps onto Zigbee's
+# ZCL `MoveToLevel`, whose level range only reaches 254, so 254 is the
+# maximum safe brightness. Test the affected bulb types before ever
+# considering a change here.
+MAX_DAY_BRIGHTNESS = 254
+
 TIME_KEYS = (
     CONF_EVENING_TIME,
     CONF_NIGHT_TIME,
