@@ -1,9 +1,11 @@
 """Common fixtures for test suite."""
 
+import datetime as dt
 from typing import TYPE_CHECKING
 
 import freezegun as FG
 import homeassistant.core as HA
+import homeassistant.util.dt as dt_util
 import pytest
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -39,6 +41,19 @@ if TYPE_CHECKING:
 def auto_enable_custom_integrations(enable_custom_integrations):
     """Enable custom integrations for every test."""
     return enable_custom_integrations
+
+
+@pytest.fixture(autouse=True)
+def pinned_default_time_zone():
+    """Pin the test default time zone to UTC.
+
+    The hass fixture switches the default time zone to US/Pacific, but
+    the integration's time calculations are timezone-aware and the
+    legacy tests freeze naive wall times. Freezing a naive wall time
+    with freezegun yields that wall time in UTC, so UTC must be the
+    default zone for the frozen wall times to match the frozen strings.
+    """
+    return dt_util.set_default_time_zone(dt.UTC)
 
 
 @pytest.fixture
