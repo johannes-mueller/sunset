@@ -243,7 +243,8 @@ async def test_override_while_active_then_reactivate(
 
     assert len(turn_on_service) == 0
 
-    hass.states.async_set("sunset.redshift_active", False)
+    await hass.services.async_call("sunset", "deactivate_redshift", {})
+    await hass.async_block_till_done()
 
     start_at_noon.tick(600)
     async_fire_time_changed_now_time(hass)
@@ -251,7 +252,8 @@ async def test_override_while_active_then_reactivate(
 
     assert len(turn_on_service) == 0
 
-    hass.states.async_set("sunset.redshift_active", True)
+    await hass.services.async_call("sunset", "activate_redshift", {})
+    await hass.async_block_till_done()
 
     start_at_noon.tick(600)
     async_fire_time_changed_now_time(hass)
@@ -815,6 +817,10 @@ async def test_redshift_dont_touch_devices(
     device_id_2 = light_2.device_id
 
     await turn_on_lights(hass, ["light_1", "light_2"])
+    await hass.async_block_till_done()
+
+    # Turning the lights on already applies the active targets.
+    turn_on_service.clear()
 
     await hass.services.async_call(
         "sunset",
@@ -824,7 +830,7 @@ async def test_redshift_dont_touch_devices(
 
     await hass.async_block_till_done()
 
-    start_at_noon.tick(600)
+    start_at_noon.move_to(some_evening_time())
     async_fire_time_changed_now_time(hass)
 
     await hass.async_block_till_done()
@@ -840,7 +846,7 @@ async def test_redshift_dont_touch_devices(
 
     await hass.async_block_till_done()
 
-    start_at_noon.tick(600)
+    start_at_noon.move_to(some_night_time())
     async_fire_time_changed_now_time(hass)
 
     await hass.async_block_till_done()
@@ -854,7 +860,8 @@ async def test_redshift_dont_touch_devices(
     )
     await hass.async_block_till_done()
 
-    start_at_noon.tick(600)
+    # Move into the evening window so a different target is due.
+    start_at_noon.move_to(some_evening_time())
     async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
@@ -870,6 +877,10 @@ async def test_redshift_dont_touch_areas(
 ):
     assert await async_setup(hass, {DOMAIN: {}})
     await turn_on_lights(hass, ["light_1", "light_2", "light_3", "light_4"])
+    await hass.async_block_till_done()
+
+    # Turning the lights on already applies the active targets.
+    turn_on_service.clear()
 
     await hass.services.async_call(
         "sunset",
@@ -879,7 +890,7 @@ async def test_redshift_dont_touch_areas(
 
     await hass.async_block_till_done()
 
-    start_at_noon.tick(600)
+    start_at_noon.move_to(some_evening_time())
     async_fire_time_changed_now_time(hass)
 
     await hass.async_block_till_done()
@@ -899,7 +910,7 @@ async def test_redshift_dont_touch_areas(
 
     await hass.async_block_till_done()
 
-    start_at_noon.tick(600)
+    start_at_noon.move_to(some_night_time())
     async_fire_time_changed_now_time(hass)
 
     await hass.async_block_till_done()
@@ -913,7 +924,8 @@ async def test_redshift_dont_touch_areas(
     )
     await hass.async_block_till_done()
 
-    start_at_noon.tick(600)
+    # Move into the evening window so a different target is due.
+    start_at_noon.move_to(some_evening_time())
     async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
@@ -941,7 +953,7 @@ async def test_redshift_deactivate_with_color_temp(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("sunset.redshift_active").state == "False"
+    assert hass.states.get("switch.sunset_redshift_active").state == "off"
 
     assert turn_on_service.pop().data[ATTR_COLOR_TEMP_KELVIN] == 2571
     assert turn_on_service.pop().data[ATTR_COLOR_TEMP_KELVIN] == 2571
@@ -965,7 +977,7 @@ async def test_redshift_deactivate_no_color_temp(
     await hass.services.async_call("sunset", "deactivate_redshift", {})
     await hass.async_block_till_done()
 
-    assert hass.states.get("sunset.redshift_active").state == "False"
+    assert hass.states.get("switch.sunset_redshift_active").state == "off"
 
     assert len(turn_on_service) == 0
 
@@ -985,12 +997,12 @@ async def test_redshift_go_redshift(
         {"color_temp": 2571},
     )
     await hass.async_block_till_done()
-    assert hass.states.get("sunset.redshift_active").state == "False"
+    assert hass.states.get("switch.sunset_redshift_active").state == "off"
 
     await hass.services.async_call("sunset", "activate_redshift", {})
     await hass.async_block_till_done()
 
-    assert hass.states.get("sunset.redshift_active").state == "True"
+    assert hass.states.get("switch.sunset_redshift_active").state == "on"
 
     assert turn_on_service.pop().data[ATTR_COLOR_TEMP_KELVIN] == 6250
     assert turn_on_service.pop().data[ATTR_COLOR_TEMP_KELVIN] == 6250
@@ -1055,10 +1067,10 @@ async def test_global_color_temp(hass, start_at_noon):
     async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sunset.color_temp_kelvin").state == "6250"
+    assert hass.states.get("sensor.sunset_colour_temperature").state == "6250"
 
     start_at_noon.move_to(some_evening_time())
     async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sunset.color_temp_kelvin").state == "4375"
+    assert hass.states.get("sensor.sunset_colour_temperature").state == "4375"

@@ -216,7 +216,7 @@ async def test_brightness_deactivate_with_brightness(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("sunset.brightness_active").state == "False"
+    assert hass.states.get("switch.sunset_brightness_active").state == "off"
 
     assert turn_on_service.pop().data[ATTR_BRIGHTNESS] == 192
     assert turn_on_service.pop().data[ATTR_BRIGHTNESS] == 192
@@ -237,10 +237,16 @@ async def test_brightness_deactivate_no_brightness(
     assert await async_setup(hass, {DOMAIN: {}})
 
     await turn_on_lights(hass, ["light_1", "light_2"])
+    await hass.async_block_till_done()
+
+    # Turning the lights on already applies the active brightness.
+    assert len(turn_on_service) == 2
+    turn_on_service.clear()
+
     await hass.services.async_call("sunset", "deactivate_brightness", {})
     await hass.async_block_till_done()
 
-    assert hass.states.get("sunset.brightness_active").state == "False"
+    assert hass.states.get("switch.sunset_brightness_active").state == "off"
 
     assert len(turn_on_service) == 0
 
@@ -402,7 +408,8 @@ async def test_override_while_active_then_reactivate(
 
     assert len(turn_on_service) == 0
 
-    hass.states.async_set("sunset.brightness_active", False)
+    await hass.services.async_call("sunset", "deactivate_brightness", {})
+    await hass.async_block_till_done()
 
     start_at_noon.tick(600)
     async_fire_time_changed_now_time(hass)
@@ -410,7 +417,8 @@ async def test_override_while_active_then_reactivate(
 
     assert len(turn_on_service) == 0
 
-    hass.states.async_set("sunset.brightness_active", True)
+    await hass.services.async_call("sunset", "activate_brightness", {})
+    await hass.async_block_till_done()
 
     start_at_noon.tick(600)
     async_fire_time_changed_now_time(hass)
@@ -468,12 +476,12 @@ async def test_brightness_go_brightness(
         "sunset", "deactivate_brightness", {"brightness": 192}
     )
     await hass.async_block_till_done()
-    assert hass.states.get("sunset.brightness_active").state == "False"
+    assert hass.states.get("switch.sunset_brightness_active").state == "off"
 
     await hass.services.async_call("sunset", "activate_brightness", {})
     await hass.async_block_till_done()
 
-    assert hass.states.get("sunset.brightness_active").state == "True"
+    assert hass.states.get("switch.sunset_brightness_active").state == "on"
 
     assert turn_on_service.pop().data[ATTR_BRIGHTNESS] == 254
     assert turn_on_service.pop().data[ATTR_BRIGHTNESS] == 254
@@ -519,10 +527,10 @@ async def test_global_brightness(hass, start_at_noon):
     async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sunset.brightness").state == "254"
+    assert hass.states.get("sensor.sunset_brightness").state == "254"
 
     start_at_noon.move_to(some_night_time())
     async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sunset.brightness").state == "127"
+    assert hass.states.get("sensor.sunset_brightness").state == "127"
