@@ -1,11 +1,15 @@
 """Sunset integration for Home Assistant."""
 
+from __future__ import annotations
+
 import datetime as dt
 import logging
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 import homeassistant.core as HA
 import homeassistant.helpers.event as EV
+import probatio
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
@@ -15,6 +19,7 @@ from homeassistant.components.light import (
     COLOR_MODES_BRIGHTNESS,
     ColorMode,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
@@ -23,23 +28,111 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNKNOWN,
 )
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import entity_registry
 
 if TYPE_CHECKING:
     from collections.abc import Generator
 
+    from homeassistant.config_entries import ConfigEntry
     from homeassistant.helpers.typing import ConfigType
 
-
 from .calculator import DaytimeCalculator, RedshiftCalculator
-
-DOMAIN = "sunset"
+from .const import (
+    CONF_BED_TIME,
+    CONF_BRIGHTNESS_ENABLED,
+    CONF_DAY_COLOR_TEMP,
+    CONF_EVENING_TIME,
+    CONF_EXCLUDED_ENTITIES,
+    CONF_MORNING_TIME,
+    CONF_NIGHT_BRIGHTNESS,
+    CONF_NIGHT_COLOR_TEMP,
+    CONF_NIGHT_TIME,
+    DOMAIN,
+    SERVICE_ACTIVATE_BRIGHTNESS,
+    SERVICE_ACTIVATE_REDSHIFT,
+    SERVICE_DEACTIVATE_BRIGHTNESS,
+    SERVICE_DEACTIVATE_REDSHIFT,
+    SERVICE_DONT_TOUCH,
+    SERVICE_HANDLE_AGAIN,
+    SERVICES,
+    normalize_config,
+)
 
 _LOGGER = logging.getLogger("sunset")
 
+CONFIG_SCHEMA = probatio.Schema(
+    {
+        DOMAIN: probatio.Schema(
+            {
+                probatio.Optional(CONF_EVENING_TIME): probatio.Any(str, cv.time),
+                probatio.Optional(CONF_NIGHT_TIME): probatio.Any(str, cv.time),
+                probatio.Optional(CONF_BED_TIME): probatio.Any(
+                    str,
+                    cv.time,
+                    probatio.Equal(None),
+                ),
+                probatio.Optional(CONF_MORNING_TIME): probatio.Any(str, cv.time),
+                probatio.Optional(CONF_DAY_COLOR_TEMP): probatio.All(
+                    probatio.Coerce(int),
+                    probatio.Range(min=2000, max=6500),
+                ),
+                probatio.Optional(CONF_NIGHT_COLOR_TEMP): probatio.All(
+                    probatio.Coerce(int),
+                    probatio.Range(min=2000, max=6500),
+                ),
+                probatio.Optional(CONF_NIGHT_BRIGHTNESS): probatio.All(
+                    probatio.Coerce(int),
+                    probatio.Range(min=0, max=255),
+                ),
+                probatio.Optional(CONF_BRIGHTNESS_ENABLED): bool,
+                probatio.Optional(CONF_EXCLUDED_ENTITIES): probatio.Any(
+                    str,
+                    [str],
+                ),
+            },
+            extra=probatio.ALLOW_EXTRA,
+        )
+    },
+    extra=probatio.ALLOW_EXTRA,
+)
+
+
+@dataclass(slots=True)
+class SunsetRuntimeData:
+    """Runtime data for the Sunset integration."""
+
 
 async def async_setup(hass: HA.HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Sunset integration."""
+    """Import YAML configuration into a config entry."""
+    if DOMAIN not in config:
+        return True
+
+    if hass.config_entries.async_entries(DOMAIN):
+        _LOGGER.warning(
+            "Sunset is already configured through the UI; ignoring YAML configuration"
+        )
+        return True
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config[DOMAIN] or {},
+        ),
+        "sunset import yaml configuration",
+    )
+    return True
+
+
+async def async_setup_entry(hass: HA.HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up the Sunset config entry."""
+    return await _async_setup_runtime(hass, entry)
+
+
+async def _async_setup_runtime(hass: HA.HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up the Sunset runtime."""
+    final_config = normalize_config({**entry.data, **entry.options})
 
     def redshift_inactive() -> bool:
         state = hass.states.get(DOMAIN + ".redshift_active")
@@ -213,16 +306,19 @@ async def async_setup(hass: HA.HomeAssistant, config: ConfigType) -> bool:
 
         device_id = event.data.get(ATTR_DEVICE_ID)
         if device_id is not None:
-            for entry in entity_registry.async_entries_for_device(
+            for entity_entry in entity_registry.async_entries_for_device(
                 entity_reg,
                 device_id,
             ):
-                yield entry.entity_id
+                yield entity_entry.entity_id
 
         area_id = event.data.get(ATTR_AREA_ID)
         if area_id is not None:
-            for entry in entity_registry.async_entries_for_area(entity_reg, area_id):
-                yield entry.entity_id
+            for entity_entry in entity_registry.async_entries_for_area(
+                entity_reg,
+                area_id,
+            ):
+                yield entity_entry.entity_id
 
         entity_ids = event.data.get(ATTR_ENTITY_ID, [])
         if isinstance(entity_ids, str):
@@ -258,34 +354,22 @@ async def async_setup(hass: HA.HomeAssistant, config: ConfigType) -> bool:
         hass.states.async_set(DOMAIN + ".brightness_active", str(True))
         await timer_event(None)
 
-    def finalized_config() -> dict[str, Any]:
-        final_config = {
-            "evening_time": "17:00",
-            "night_time": "23:00",
-            "bed_time": "00:00",
-            "morning_time": "06:00",
-            "day_color_temp": 6250,
-            "night_color_temp": 2500,
-            "night_brightness": 127,
-        }
-        final_config.update(config[DOMAIN])
-        return final_config
-
     def make_redshift_calculator() -> RedshiftCalculator:
         return RedshiftCalculator(
-            final_config["evening_time"],
-            final_config["night_time"],
-            final_config["morning_time"],
-            final_config["day_color_temp"],
-            final_config["night_color_temp"],
+            final_config[CONF_EVENING_TIME],
+            final_config[CONF_NIGHT_TIME],
+            final_config[CONF_MORNING_TIME],
+            final_config[CONF_DAY_COLOR_TEMP],
+            final_config[CONF_NIGHT_COLOR_TEMP],
         )
 
     def make_brightness_calculator() -> DaytimeCalculator | None:
-        if final_config["bed_time"] == "null":
+        if not final_config[CONF_BRIGHTNESS_ENABLED]:
             return None
-        return DaytimeCalculator(final_config["bed_time"], final_config["morning_time"])
-
-    final_config = finalized_config()
+        return DaytimeCalculator(
+            final_config[CONF_BED_TIME],
+            final_config[CONF_MORNING_TIME],
+        )
 
     redshift_calculator = make_redshift_calculator()
     brightness_calculator = make_brightness_calculator()
@@ -295,14 +379,24 @@ async def async_setup(hass: HA.HomeAssistant, config: ConfigType) -> bool:
     manual_color_temp: int | None = None
     manual_brightness: int | None = None
 
-    lights_not_to_touch: set[str] = set()
+    lights_not_to_touch: set[str] = set(final_config[CONF_EXCLUDED_ENTITIES])
 
-    hass.services.async_register(DOMAIN, "dont_touch", dont_touch)
-    hass.services.async_register(DOMAIN, "handle_again", handle_again)
-    hass.services.async_register(DOMAIN, "activate_redshift", activate_redshift)
-    hass.services.async_register(DOMAIN, "deactivate_redshift", deactivate_redshift)
-    hass.services.async_register(DOMAIN, "activate_brightness", activate_brightness)
-    hass.services.async_register(DOMAIN, "deactivate_brightness", deactivate_brightness)
+    hass.services.async_register(DOMAIN, SERVICE_DONT_TOUCH, dont_touch)
+    hass.services.async_register(DOMAIN, SERVICE_HANDLE_AGAIN, handle_again)
+    hass.services.async_register(DOMAIN, SERVICE_ACTIVATE_REDSHIFT, activate_redshift)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_DEACTIVATE_REDSHIFT,
+        deactivate_redshift,
+    )
+    hass.services.async_register(
+        DOMAIN, SERVICE_ACTIVATE_BRIGHTNESS, activate_brightness
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_DEACTIVATE_BRIGHTNESS,
+        deactivate_brightness,
+    )
 
     hass.states.async_set(DOMAIN + ".redshift_active", str(True))
     hass.states.async_set(DOMAIN + ".brightness_active", str(True))
@@ -316,10 +410,29 @@ async def async_setup(hass: HA.HomeAssistant, config: ConfigType) -> bool:
         STATE_UNKNOWN if initial_brightness is None else str(initial_brightness),
     )
 
-    EV.async_track_time_interval(
+    unsub = EV.async_track_time_interval(
         hass, timer_event, dt.timedelta(seconds=1), cancel_on_shutdown=True
     )
 
+    def async_unload_runtime() -> None:
+        unsub()
+        for service in SERVICES:
+            hass.services.async_remove(DOMAIN, service)
+        for state in (
+            "redshift_active",
+            "brightness_active",
+            "color_temp_kelvin",
+            "brightness",
+        ):
+            hass.states.async_remove(f"{DOMAIN}.{state}")
+
+    entry.async_on_unload(async_unload_runtime)
+    entry.runtime_data = SunsetRuntimeData()
+    return True
+
+
+async def async_unload_entry(_hass: HA.HomeAssistant, _entry: ConfigEntry) -> bool:
+    """Unload a Sunset config entry."""
     return True
 
 

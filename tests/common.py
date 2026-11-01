@@ -14,9 +14,13 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import STATE_OFF, STATE_ON
 from pytest_homeassistant_custom_component.common import (
+    MockConfigEntry,
     MockEntity,
     async_fire_time_changed,
 )
+
+from custom_components.sunset.const import DOMAIN as SUNSET_DOMAIN
+from custom_components.sunset.const import normalize_config
 
 from .const import (
     MAX_COLOR_TEMP_KELVIN,
@@ -101,6 +105,18 @@ async def make_lights(
         )
 
     return [entity_registry.async_get(entity.entity_id) for entity in entities]
+
+
+async def async_setup(hass, config):
+    """Set up Sunset through a config entry."""
+    entry = MockConfigEntry(
+        domain=SUNSET_DOMAIN,
+        data=normalize_config(config.get(SUNSET_DOMAIN, {})),
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    return True
 
 
 def _time_forward(time_string):

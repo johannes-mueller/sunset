@@ -3,10 +3,12 @@
     "name": "Sunset",
     "categories": ["helpers", "lighting.bulbs_lamps"],
     "codeowners": ["@johannes-mueller"],
+    "config_flow": true,
     "documentation": "https://github.com/johannes-mueller/sunset/blob/master/README.md",
     "integration_type": "helper",
     "iot_class": "calculated",
     "issue_tracker": "https://github.com/johannes-mueller/sunset/issues",
     "requirements": [],
+    "single_config_entry": true,
     "version": "0.1.0"
 }

@@ -18,103 +18,127 @@ light would be more appropriate.  This integration for
 
 ## Features
 
-You can configure three times in your `configuration.yaml`.
+Sunset gradually shifts the colour temperature of your lights towards a warmer
+level during the evening.  It can also lower the brightness at a configured
+bed time as a soft reminder to go to sleep.
 
-  * `evening_time`: the time when the redshift will start
-  * `night_time`: the time when the redshift has reached the final color
-    temperature.
-  * `morning_time`: the time when the color temperature will get back to the
-    day time level.
-
-  * `day_color_temp`: the color temperature at daytime in Kelvin
-  * `night_color_temp`: the color temperature at nighttime in Kelvin
-
-Besides the color temperature Sunset can also manipulate the brightness of
-the lights.  In contrast to the color temperature it does not shift the
-brightness continuously but drops the brightness of all lights at a given
-time.  This is meant to be a soft reminder that it is time for you to go to
-bed.
-
-  * `bed_time`: The time when the brightness should be dropped or 'null' to
-     disable brightness manipulation.
-  * `night_brightness`: The brightness after bed time (default 127)
+All settings are configured through the Home Assistant UI and stored in a
+config entry.
 
 
-### Color temperature translation behavior
+## Configuration
 
-The component takes over the color temperature of all the lights available in
-the system.  Between `morning_time` and `evening_time` the color temperature
-will be set to the level of `day_color_temp`.  Once `evening_time` is reached
-the color temperature will slowly transition to `night_color_temp`.  The
-`night_color_temp` value will be reached exactly at `night_time` and maintained
-during the night.  Once `morning_time` is reached the color temperature will
-instantaneously go back to `day_color_temp`.
+1. Open **Settings > Devices & services > Add integration**.
+2. Search for **Sunset** and add it.
+3. Configure the schedule and brightness settings.
+4. Use **Configure** on the Sunset integration card to change the settings
+   later.
+
+### Options
+
+- **Evening time**: when the colour temperature starts shifting.
+- **Night time**: when the night colour temperature is reached.
+- **Morning time**: when the colour temperature returns to the daytime level.
+- **Day colour temperature**: colour temperature during the day, in Kelvin.
+- **Night colour temperature**: colour temperature during the night, in Kelvin.
+- **Bed time**: when brightness is lowered.
+- **Night brightness**: brightness after bed time.
+- **Dim lights at bed time**: disable this to keep brightness unchanged.
+- **Lights Sunset should not control**: persistent list of lights that Sunset
+  should ignore.
+
+### Migrating from YAML
+
+If your `configuration.yaml` still contains a `sunset:` block, Sunset imports
+those settings into a config entry on the first start.  Verify the imported
+settings in the UI, then remove the YAML block and restart Home Assistant.
+
+### Colour temperature behaviour
+
+The integration takes over the colour temperature of the lights available in
+the system.  Between `morning_time` and `evening_time` the colour temperature
+is set to `day_color_temp`.  Once `evening_time` is reached it slowly
+transitions to `night_color_temp`, which is reached at `night_time` and
+maintained during the night.  At `morning_time` it returns to the daytime
+level.
+
+### Manually overriding the colour temperature and brightness
+
+You can manually override the colour temperature or brightness of a light or
+group of lights by adjusting it in the usual way, for example from the web
+interface.  Sunset will not change that value as long as the light remains
+switched on.  Once the light is switched off and on again, Sunset resumes
+control.
+
+### Excluding lights
+
+The **Lights Sunset should not control** option is persistent and survives
+restarts.
+
+The services `sunset.dont_touch` and `sunset.handle_again` are temporary
+alternatives.  They accept a `device_id`, an `area_id`, or an `entity_id`.
+`sunset.dont_touch` stops Sunset from manipulating the given lights, while
+`sunset.handle_again` hands them back to Sunset.
+
+Temporary exclusions are forgotten when Home Assistant restarts.
 
 
-### Manually overriding the color temperature and the brightness
+## Services
 
-You can manually override the color temperature and the brightness for a
-certain light or group of lights just by adjusting it in a usual way, e.g. the
-web interface.  The color temperature of this light will then not be changed as
-long as the light remains switched on.  Once the light goes off and on again,
-its color temperature and the brightness will be again governed by Sunset.
+### Activating and deactivating colour temperature handling
 
+Use `sunset.activate_redshift` and `sunset.deactivate_redshift` to enable or
+disable colour temperature handling.  `sunset.deactivate_redshift` optionally
+takes a `color_temp` parameter in Kelvin to apply to all lights.  If it is not
+given, the current colour temperature is left unchanged.
 
-### Forbidding Sunset to touch a specific light
+### Activating and deactivating brightness handling
 
-There are the services `sunset.dont_touch` and `sunset.handle_again`. They both
-take a `device_id` an `area_id` or an `entity_id` as parameter.  As you would
-guess from the names `sunset.dont_touch` makes Sunset not manipulate a certain
-light, whereas `sunset.handle_again` makes Sunset control the light again.
-
-Lights have to be specified as lists of entities, an area or a device.
-
-Be aware that the lights not to be touched are not persistent.  They are
-forgotten as soon as the component is restarted.  So it is just meant as a
-temporary measure.
+Use `sunset.activate_brightness` and `sunset.deactivate_brightness` to enable
+or disable brightness handling.  `sunset.deactivate_brightness` optionally
+takes a `brightness` parameter to apply to all lights.
 
 
-### Activating and deactivating
+## Planned features
 
-You can use the services `sunset.activate_redshift` and
-`sunset.deactivate_redshift` to activate and deactivate the redshift
-altogether.  The `sunset.deactivate_redshift` service takes an optional
-`color_temp` parameter to apply a certain color temperature to all lights.  If
-it is not given the color temperature is not changed on deactivation.
-
-Similarly you can use the services `sunset.activate_brightness` and
-`sunset.deactivate_brightness` to deactivate the dimming.
-
-### Planned features
-
-* Shift the color temperature back in the morning over a defined time.  As of
-  now the back shift to day temperature happens instantaneously.
-
-* Configure lights that are generally ignored by Sunset.
+* Shift the colour temperature back in the morning over a defined time.  As of
+  now the back shift to the day temperature happens instantaneously.
 
 No ETAs given.
 
 
 ## Status
 
-Sunset is usable, but it is still under active development.  The integration
-currently uses YAML configuration; a config flow is planned.
+Sunset is usable, but it is still under active development.
 
 
 ## Installation
 
 ### HACS
 
+Sunset is currently available as a HACS custom repository.
+
 1. Make sure [HACS](https://hacs.xyz) is installed.
 2. Add this repository as a custom repository of type **Integration**.
 3. Install **Sunset** from HACS.
-4. Add the configuration to your `configuration.yaml` and restart Home
-   Assistant.
+4. Restart Home Assistant.
+5. Add **Sunset** from **Settings > Devices & services > Add integration**.
+
+Existing `configuration.yaml` settings are imported automatically on the first
+start.  After that, the integration is configured from the UI.
 
 ### Manual installation
 
 Copy or symlink the directory `custom_components/sunset` into your
 `.homeassistant/custom_components` directory, then restart Home Assistant.
+
+
+## Removal
+
+Remove the integration from **Settings > Devices & services**, then remove the
+custom repository from HACS if you no longer need it.  If you migrated from
+YAML, make sure the old `sunset:` block is not left in `configuration.yaml`.
+
 
 ## Development
 
