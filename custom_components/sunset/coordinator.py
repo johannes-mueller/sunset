@@ -135,14 +135,15 @@ class SunsetDataCoordinator:
         self._unsub_schedule = EV.async_track_point_in_time(
             self.hass,
             self._scheduled_event,
-            self._next_event(now),
+            self._next_event_time(now),
         )
 
     async def _scheduled_event(self, _: dt.datetime | None) -> None:
         await self.async_apply()
         self._schedule_next()
 
-    def _next_event(self, now: dt.datetime) -> dt.datetime:
+    def _next_event_time(self, now: dt.datetime) -> dt.datetime:
+        """Return when the next schedule callback has to run after ``now``."""
         candidates = [
             self._next_occurrence(self._evening_time, now),
             self._next_occurrence(self._night_time, now),
