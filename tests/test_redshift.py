@@ -106,7 +106,8 @@ async def test_service_active_inactive(
 
     turn_on_service.pop()
 
-    hass.states.async_set("sunset.redshift_active", False)
+    await hass.services.async_call("sunset", "deactivate_redshift", {})
+    await hass.async_block_till_done()
 
     start_at_noon.tick(600)
     async_fire_time_changed_now_time(hass)
@@ -114,13 +115,16 @@ async def test_service_active_inactive(
 
     assert len(turn_on_service) == 0
 
-    hass.states.async_set("sunset.redshift_active", True)
+    await hass.services.async_call("sunset", "activate_redshift", {})
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 1
 
     start_at_noon.tick(600)
     async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
-    assert len(turn_on_service) == 1
+    assert len(turn_on_service) == 2
 
 
 async def test_light_goes_on_while_inactive(
@@ -141,7 +145,8 @@ async def test_light_goes_on_while_inactive(
 
     turn_on_service.pop()
 
-    hass.states.async_set("sunset.redshift_active", False)
+    await hass.services.async_call("sunset", "deactivate_redshift", {})
+    await hass.async_block_till_done()
 
     hass.states.async_set(
         "light.light_1",
@@ -169,13 +174,16 @@ async def test_light_goes_on_while_inactive(
 
     assert len(turn_on_service) == 0
 
-    hass.states.async_set("sunset.redshift_active", True)
+    await hass.services.async_call("sunset", "activate_redshift", {})
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 1
 
     start_at_noon.tick(600)
     async_fire_time_changed_now_time(hass)
     await hass.async_block_till_done()
 
-    assert len(turn_on_service) == 1
+    assert len(turn_on_service) == 2
 
 
 async def test_override_brightness_do_touch(
