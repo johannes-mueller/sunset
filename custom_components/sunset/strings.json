@@ -50,5 +50,23 @@
     "error": {
       "invalid_config": "The configuration is invalid."
     }
+  },
+  "entity": {
+    "switch": {
+      "redshift_active": {
+        "name": "Redshift active"
+      },
+      "brightness_active": {
+        "name": "Brightness active"
+      }
+    },
+    "sensor": {
+      "color_temp_kelvin": {
+        "name": "Colour temperature"
+      },
+      "brightness": {
+        "name": "Brightness"
+      }
+    }
   }
 }

@@ -5,10 +5,19 @@ from __future__ import annotations
 import datetime as dt
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.const import Platform
+
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
 DOMAIN = "sunset"
+
+PLATFORMS = (Platform.SWITCH, Platform.SENSOR)
+
+#: Cadence of colour temperature updates inside the evening
+#: interpolation window. Outside that window the targets only change at
+#: the configured transition times.
+INTERPOLATION_INTERVAL = dt.timedelta(minutes=1)
 
 CONF_EVENING_TIME = "evening_time"
 CONF_NIGHT_TIME = "night_time"

@@ -25,6 +25,7 @@ from .const import (
     CONF_NIGHT_COLOR_TEMP,
     CONF_NIGHT_TIME,
     DOMAIN,
+    PLATFORMS,
 )
 from .coordinator import SunsetDataCoordinator, SunsetRuntimeData
 
@@ -92,11 +93,12 @@ async def async_setup(hass: HA.HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HA.HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Sunset config entry."""
     coordinator = SunsetDataCoordinator(hass, entry)
-    coordinator.register()
     entry.runtime_data = SunsetRuntimeData(coordinator=coordinator)
+    await coordinator.async_setup()
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(_hass: HA.HomeAssistant, _entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HA.HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a Sunset config entry."""
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
