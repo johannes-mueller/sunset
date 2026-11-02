@@ -1,3 +1,4 @@
+import pytest
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_SUPPORTED_COLOR_MODES,
@@ -427,40 +428,29 @@ async def test_override_while_active_then_reactivate(
     assert len(turn_on_service) == 0
 
 
-async def test_brightness_bwlight(
+@pytest.mark.parametrize(
+    ("light_name", "expected_calls"),
+    [("bwlight_1", 0), ("dimlight_1", 1)],
+)
+async def test_brightness_depends_on_the_supported_modes(
     hass,
     bw_light,
-    turn_on_service,
-    start_at_noon,
-):
-    assert await async_setup(hass, {DOMAIN: {}})
-
-    await turn_on_lights(hass, ["bwlight_1"])
-
-    start_at_noon.move_to(some_night_time())
-    async_fire_time_changed_now_time(hass)
-
-    await hass.async_block_till_done()
-
-    assert len(turn_on_service) == 0
-
-
-async def test_brightness_dimlight(
-    hass,
     dim_light,
     turn_on_service,
     start_at_noon,
+    light_name,
+    expected_calls,
 ):
     assert await async_setup(hass, {DOMAIN: {}})
 
-    await turn_on_lights(hass, ["dimlight_1"])
+    await turn_on_lights(hass, [light_name])
 
     start_at_noon.move_to(some_night_time())
     async_fire_time_changed_now_time(hass)
 
     await hass.async_block_till_done()
 
-    assert len(turn_on_service) == 1
+    assert len(turn_on_service) == expected_calls
 
 
 async def test_brightness_go_brightness(
