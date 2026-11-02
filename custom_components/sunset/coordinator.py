@@ -108,6 +108,7 @@ class SunsetDataCoordinator:
         self._own_context_ids: deque[str] = deque(maxlen=_MAX_TRACKED_CONTEXTS)
         self._unsub_schedule: EV.CALLBACK_TYPE = _noop
         self._unsub_state_changes: EV.CALLBACK_TYPE = _noop
+        self.next_scheduled_event: dt.datetime = dt_util.now()
 
     async def async_setup(self) -> None:
         """Register services, listeners and schedule, and derive the state."""
@@ -140,10 +141,11 @@ class SunsetDataCoordinator:
     def _schedule_next(self) -> None:
         self._unsub_schedule()
         now = dt_util.now()
+        self.next_scheduled_event = self._next_event_time(now)
         self._unsub_schedule = EV.async_track_point_in_time(
             self.hass,
             self._scheduled_event,
-            self._next_event_time(now),
+            self.next_scheduled_event,
         )
 
     async def _scheduled_event(self, _: dt.datetime | None) -> None:
