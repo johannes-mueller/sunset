@@ -724,7 +724,7 @@ async def test_redshift_handle_again_key_error(
     await hass.services.async_call(
         "sunset",
         "handle_again",
-        {ATTR_ENTITY_ID: ["some_stupidity"]},
+        {ATTR_ENTITY_ID: ["light.some_light"]},
     )
     await hass.async_block_till_done()
 
@@ -733,7 +733,7 @@ async def test_redshift_handle_again_key_error(
         r for r in caplog.records if r.levelname == "WARNING" and r.name == "sunset"
     ]
     assert len(warnings) == 1
-    assert warnings[0].message == "Unknown entity_id: some_stupidity"
+    assert warnings[0].message == "Unknown entity_id: light.some_light"
 
     caplog.clear()
 
@@ -741,7 +741,7 @@ async def test_redshift_handle_again_key_error(
     await hass.services.async_call(
         "sunset",
         "handle_again",
-        {ATTR_ENTITY_ID: ["another_stupidity"]},
+        {ATTR_ENTITY_ID: ["light.unknown_light"]},
     )
     await hass.async_block_till_done()
 
@@ -749,7 +749,7 @@ async def test_redshift_handle_again_key_error(
         r for r in caplog.records if r.levelname == "WARNING" and r.name == "sunset"
     ]
     assert len(warnings) == 1
-    assert warnings[0].message == "Unknown entity_id: another_stupidity"
+    assert warnings[0].message == "Unknown entity_id: light.unknown_light"
 
 
 async def test_redshift_handle_again_no_key_error(
@@ -761,19 +761,19 @@ async def test_redshift_handle_again_no_key_error(
     await hass.services.async_call(
         "sunset",
         "dont_touch",
-        {ATTR_ENTITY_ID: ["some_stupidity"]},
+        {ATTR_ENTITY_ID: ["light.some_light"]},
     )
     await hass.async_block_till_done()
     await hass.services.async_call(
         "sunset",
         "handle_again",
-        {ATTR_ENTITY_ID: ["some_stupidity"]},
+        {ATTR_ENTITY_ID: ["light.some_light"]},
     )
     await hass.async_block_till_done()
 
     assert not any(r.levelname == "ERROR" for r in caplog.records)
     assert not any(
-        r.levelname == "WARNING" and r.message == "Unknown entity_id: some_stupidity"
+        r.levelname == "WARNING" and r.message == "Unknown entity_id: light.some_light"
         for r in caplog.records
     )
 
@@ -786,14 +786,14 @@ async def test_redshift_dont_touch_entity_id_not_as_list(
     await hass.services.async_call(
         "sunset",
         "dont_touch",
-        {ATTR_ENTITY_ID: "some_stupidity"},
+        {ATTR_ENTITY_ID: "light.some_light"},
     )
     await hass.async_block_till_done()
 
     await hass.services.async_call(
         "sunset",
         "handle_again",
-        {ATTR_ENTITY_ID: "some_stupidity"},
+        {ATTR_ENTITY_ID: "light.some_light"},
     )
     await hass.async_block_till_done()
 
