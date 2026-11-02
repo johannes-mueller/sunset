@@ -210,11 +210,16 @@ class SunsetController:
         if light_is_not_color_temp_light:
             return {}
 
-        if tracked is not None and (
+        light_was_on_before = tracked is not None
+        # An unknown current value counts as "changed": we cannot verify
+        # the user's intent, so we leave that dimension alone.
+        somebody_changed_color_temp = (
             current_color_temp_kelvin is None
             or _mired_of_kelvin(known_color_temp_kelvin)
             != _mired_of_kelvin(current_color_temp_kelvin)
-        ):
+        )
+
+        if somebody_changed_color_temp and light_was_on_before:
             return {}
 
         color_temp = self._color_temp_in_limits(current_state)
@@ -268,9 +273,14 @@ class SunsetController:
         if light_is_not_dimmable:
             return {}
 
-        if tracked is not None and (
+        light_was_on_before = tracked is not None
+        # An unknown current value counts as "changed": we cannot verify
+        # the user's intent, so we leave that dimension alone.
+        somebody_changed_brightness = (
             current_brightness is None or known_brightness != current_brightness
-        ):
+        )
+
+        if somebody_changed_brightness and light_was_on_before:
             return {}
 
         if not self.brightness_active:
