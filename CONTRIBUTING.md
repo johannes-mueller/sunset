@@ -48,3 +48,15 @@ uv run pytest
 ```
 
 The pytest configuration enables branch coverage and fails below 100%.
+
+## Release Checklist
+
+1. Review the minimum Home Assistant version in `hacs.json`. Raise it only
+   deliberately, and mention the new floor in the release notes.
+2. Keep the version in `custom_components/sunset/manifest.json` and
+   `pyproject.toml` identical.
+3. Update the changelog with user-visible changes, breaking changes, and the
+   minimum Home Assistant version.
+4. Run all checks above.
+5. Create the release tag, then verify that the HACS Action and Hassfest
+   workflows pass on the release commit.
