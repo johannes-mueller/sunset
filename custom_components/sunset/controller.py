@@ -8,6 +8,7 @@ and the ignored entities. It is pure decision logic — it neither touches
 
 from __future__ import annotations
 
+import logging
 import typing
 from dataclasses import dataclass
 
@@ -33,6 +34,8 @@ if typing.TYPE_CHECKING:
     from homeassistant.core import State
 
     from .calculator import DaytimeCalculator, RedshiftCalculator
+
+_LOGGER = logging.getLogger("sunset")
 
 
 @dataclass(slots=True)
@@ -199,10 +202,6 @@ class SunsetController:
         )
         current_color_temp_kelvin = current_state.attributes.get(ATTR_COLOR_TEMP_KELVIN)
 
-        light_was_on_before = tracked is not None
-        somebody_changed_color_temp = _mired_of_kelvin(
-            known_color_temp_kelvin
-        ) != _mired_of_kelvin(current_color_temp_kelvin)
         light_is_not_color_temp_light = (
             ColorMode.COLOR_TEMP
             not in current_state.attributes.get(ATTR_SUPPORTED_COLOR_MODES, [])
@@ -211,10 +210,22 @@ class SunsetController:
         if light_is_not_color_temp_light:
             return {}
 
-        if somebody_changed_color_temp and light_was_on_before:
+        if tracked is not None and (
+            current_color_temp_kelvin is None
+            or _mired_of_kelvin(known_color_temp_kelvin)
+            != _mired_of_kelvin(current_color_temp_kelvin)
+        ):
             return {}
 
         color_temp = self._color_temp_in_limits(current_state)
+
+        if color_temp is None:
+            _LOGGER.debug(
+                "Light %s reports colour temperature support but no usable "
+                "min/max Kelvin; skipping the colour update",
+                entity_id,
+            )
+            return {}
 
         if not self.redshift_active or _mired_of_kelvin(color_temp) == _mired_of_kelvin(
             current_color_temp_kelvin
@@ -223,11 +234,23 @@ class SunsetController:
 
         return {ATTR_COLOR_TEMP_KELVIN: color_temp}
 
-    def _color_temp_in_limits(self, current_state: State) -> int:
-        min_color_temp_kelvin = current_state.attributes[ATTR_MIN_COLOR_TEMP_KELVIN]
-        max_color_temp_kelvin = current_state.attributes[ATTR_MAX_COLOR_TEMP_KELVIN]
-        target = self.target_color_temp()
-        return min(max_color_temp_kelvin, max(min_color_temp_kelvin, target))
+    def _color_temp_in_limits(self, current_state: State) -> int | None:
+        min_color_temp_kelvin = current_state.attributes.get(ATTR_MIN_COLOR_TEMP_KELVIN)
+        max_color_temp_kelvin = current_state.attributes.get(ATTR_MAX_COLOR_TEMP_KELVIN)
+        if min_color_temp_kelvin is None or max_color_temp_kelvin is None:
+            return None
+        try:
+            return min(
+                max_color_temp_kelvin,
+                max(min_color_temp_kelvin, self.target_color_temp()),
+            )
+        except TypeError:
+            _LOGGER.debug(
+                "Light has malformed colour temperature limits: %r..%r",
+                min_color_temp_kelvin,
+                max_color_temp_kelvin,
+            )
+            return None
 
     def _brightness_commands(
         self,
@@ -238,8 +261,6 @@ class SunsetController:
         known_brightness = tracked.brightness if tracked is not None else None
         current_brightness = current_state.attributes.get(ATTR_BRIGHTNESS)
 
-        light_was_on_before = tracked is not None
-        somebody_changed_brightness = known_brightness != current_brightness
         light_is_not_dimmable = COLOR_MODES_BRIGHTNESS.isdisjoint(
             current_state.attributes.get(ATTR_SUPPORTED_COLOR_MODES, [])
         )
@@ -247,7 +268,9 @@ class SunsetController:
         if light_is_not_dimmable:
             return {}
 
-        if somebody_changed_brightness and light_was_on_before:
+        if tracked is not None and (
+            current_brightness is None or known_brightness != current_brightness
+        ):
             return {}
 
         if not self.brightness_active:
@@ -270,6 +293,6 @@ def _tracked_factory(current_state: State) -> LightTrack:
 
 
 def _mired_of_kelvin(kelvin: int | None) -> int | None:
-    if kelvin is None:
+    if not isinstance(kelvin, int) or kelvin <= 0:
         return None
     return int(1e6 / kelvin)
