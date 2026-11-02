@@ -1,6 +1,6 @@
 [project]
 name = "sunset"
-version = "0.1.0"
+version = "0.2.0"
 description = "Mimic twilight to get yourself accustomed to the evening for better sleep"
 readme = "README.md"
 authors = [
