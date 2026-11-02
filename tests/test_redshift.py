@@ -394,33 +394,18 @@ async def test_redshift_night_to_day(
     assert turn_on_service[0].data[ATTR_COLOR_TEMP_KELVIN] == 6250
 
 
-async def test_redshift_bwlight(
+@pytest.mark.parametrize("light_name", ["bwlight_1", "dimlight_1"])
+async def test_redshift_lights_without_colour_temp_are_left_alone(
     hass,
     bw_light,
-    turn_on_service,
-    start_at_noon,
-):
-    assert await async_setup(hass, {DOMAIN: {}})
-
-    await turn_on_lights(hass, ["bwlight_1"])
-
-    start_at_noon.move_to(some_evening_time())
-    async_fire_time_changed_now_time(hass)
-
-    await hass.async_block_till_done()
-
-    assert len(turn_on_service) == 0
-
-
-async def test_redshift_dimlight(
-    hass,
     dim_light,
     turn_on_service,
     start_at_noon,
+    light_name,
 ):
     assert await async_setup(hass, {DOMAIN: {}})
 
-    await turn_on_lights(hass, ["dimlight_1"])
+    await turn_on_lights(hass, [light_name])
 
     start_at_noon.move_to(some_evening_time())
     async_fire_time_changed_now_time(hass)

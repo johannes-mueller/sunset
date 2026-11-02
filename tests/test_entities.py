@@ -12,6 +12,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.icon import async_get_icons
 
 from custom_components.sunset.const import DOMAIN
 
@@ -39,6 +40,18 @@ async def test_entities_are_created(hass, start_at_noon):
     assert float(hass.states.get(COLOR_SENSOR).state) == 6250
     assert "device_class" not in hass.states.get(COLOR_SENSOR).attributes
     assert float(hass.states.get(BRIGHTNESS_SENSOR).state) == 254
+
+    icons = await async_get_icons(hass, "entity", ["sunset"])
+    assert icons["sunset"] == {
+        "switch": {
+            "redshift_active": {"default": "mdi:theme-light-dark"},
+            "brightness_active": {"default": "mdi:brightness-6"},
+        },
+        "sensor": {
+            "color_temp_kelvin": {"default": "mdi:thermometer"},
+            "brightness": {"default": "mdi:brightness-percent"},
+        },
+    }
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     entity_reg = er.async_get(hass)

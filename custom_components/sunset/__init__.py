@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 import probatio
 from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
 
 if TYPE_CHECKING:
@@ -92,7 +93,12 @@ async def async_setup(hass: HA.HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HA.HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Sunset config entry."""
-    coordinator = SunsetDataCoordinator(hass, entry)
+    try:
+        coordinator = SunsetDataCoordinator(hass, entry)
+    except (TypeError, ValueError) as err:
+        msg = f"Invalid Sunset configuration: {err}"
+        raise ConfigEntryError(msg) from err
+
     entry.runtime_data = SunsetRuntimeData(coordinator=coordinator)
     await coordinator.async_setup()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

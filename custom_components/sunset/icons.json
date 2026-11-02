@@ -1,0 +1,20 @@
+{
+  "entity": {
+    "switch": {
+      "redshift_active": {
+        "default": "mdi:theme-light-dark"
+      },
+      "brightness_active": {
+        "default": "mdi:brightness-6"
+      }
+    },
+    "sensor": {
+      "color_temp_kelvin": {
+        "default": "mdi:thermometer"
+      },
+      "brightness": {
+        "default": "mdi:brightness-percent"
+      }
+    }
+  }
+}

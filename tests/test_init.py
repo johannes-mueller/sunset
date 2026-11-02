@@ -2,11 +2,13 @@
 
 import logging
 
+import pytest
 from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.setup import async_setup_component
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.sunset import async_setup
+from custom_components.sunset import async_setup, async_setup_entry
 from custom_components.sunset.const import DEFAULT_OPTIONS, DOMAIN
 
 
@@ -72,3 +74,14 @@ async def test_reload(hass):
     await hass.async_block_till_done()
 
     assert hass.states.get("switch.sunset_redshift_active").state == "on"
+
+
+async def test_setup_with_invalid_entry_raises(hass):
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**DEFAULT_OPTIONS, "evening_time": "not-a-time"},
+    )
+    entry.add_to_hass(hass)
+
+    with pytest.raises(ConfigEntryError):
+        await async_setup_entry(hass, entry)

@@ -14,6 +14,17 @@
           "night_brightness": "Night brightness",
           "brightness_enabled": "Dim lights at bed time",
           "excluded_entities": "Lights Sunset should not control"
+        },
+        "data_description": {
+          "evening_time": "When the colour temperature starts shifting towards the night value.",
+          "night_time": "When the night colour temperature is reached.",
+          "bed_time": "When brightness is lowered; leave empty to keep brightness unchanged.",
+          "morning_time": "When the colour temperature returns to the daytime value.",
+          "day_color_temp": "Colour temperature during the day, in Kelvin.",
+          "night_color_temp": "Colour temperature during the night, in Kelvin.",
+          "night_brightness": "Brightness applied after bed time, from 0 to 255.",
+          "brightness_enabled": "Disable to leave the brightness of your lights unchanged.",
+          "excluded_entities": "Lights Sunset should never control; temporary exclusions use the services instead."
         }
       },
       "import": {
@@ -44,6 +55,17 @@
           "night_brightness": "Night brightness",
           "brightness_enabled": "Dim lights at bed time",
           "excluded_entities": "Lights Sunset should not control"
+        },
+        "data_description": {
+          "evening_time": "When the colour temperature starts shifting towards the night value.",
+          "night_time": "When the night colour temperature is reached.",
+          "bed_time": "When brightness is lowered; leave empty to keep brightness unchanged.",
+          "morning_time": "When the colour temperature returns to the daytime value.",
+          "day_color_temp": "Colour temperature during the day, in Kelvin.",
+          "night_color_temp": "Colour temperature during the night, in Kelvin.",
+          "night_brightness": "Brightness applied after bed time, from 0 to 255.",
+          "brightness_enabled": "Disable to leave the brightness of your lights unchanged.",
+          "excluded_entities": "Lights Sunset should never control; temporary exclusions use the services instead."
         }
       }
     },
