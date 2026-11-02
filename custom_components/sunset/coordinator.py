@@ -19,7 +19,13 @@ import homeassistant.core as HA
 import homeassistant.helpers.event as EV
 import homeassistant.util.dt as dt_util
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP_KELVIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ENTITY_MATCH_ALL,
+    ENTITY_MATCH_NONE,
+    SERVICE_TURN_ON,
+    STATE_ON,
+)
 from homeassistant.helpers import service as service_helper
 
 from .calculator import DaytimeCalculator, RedshiftCalculator
@@ -33,6 +39,8 @@ from .const import (
     CONF_NIGHT_TIME,
     DOMAIN,
     INTERPOLATION_INTERVAL,
+    SERVICE_FIELD_BRIGHTNESS,
+    SERVICE_FIELD_COLOR_TEMP,
     SERVICES,
     normalize_config,
 )
@@ -208,7 +216,15 @@ class SunsetDataCoordinator:
         entity_id: str,
         current_state: HA.State,
     ) -> None:
-        commands = self.controller.compute_commands(entity_id, current_state)
+        try:
+            commands = self.controller.compute_commands(entity_id, current_state)
+        except Exception:  # one odd light must not stop the cycle
+            _LOGGER.exception(
+                "Could not compute the update for light %s",
+                entity_id,
+            )
+            return
+
         if not commands:
             return
 
@@ -280,7 +296,7 @@ class SunsetDataCoordinator:
 
     async def handle_deactivate_redshift(self, call: HA.ServiceCall) -> None:
         """Deactivate automatic redshifting, optionally at a manual value."""
-        if self.controller.deactivate_redshift(call.data.get("color_temp")):
+        if self.controller.deactivate_redshift(call.data.get(SERVICE_FIELD_COLOR_TEMP)):
             await self.async_apply()
         self.controller.set_redshift_active(active=False)
         self._notify_entities()
@@ -291,7 +307,8 @@ class SunsetDataCoordinator:
 
     async def handle_deactivate_brightness(self, call: HA.ServiceCall) -> None:
         """Deactivate automatic brightness handling, optionally at a manual value."""
-        if self.controller.deactivate_brightness(call.data.get("brightness")):
+        brightness = call.data.get(SERVICE_FIELD_BRIGHTNESS)
+        if self.controller.deactivate_brightness(brightness):
             await self.async_apply()
         self.controller.set_brightness_active(active=False)
         self._notify_entities()
@@ -308,11 +325,13 @@ class SunsetDataCoordinator:
 
     async def _target_entity_ids(self, call: HA.ServiceCall) -> list[str]:
         """Resolve entity, device and area targets to light entity ids."""
-        extracted = await service_helper.async_extract_entity_ids(call)
-
         raw_entity_ids = call.data.get(ATTR_ENTITY_ID, [])
-        if isinstance(raw_entity_ids, str):
-            raw_entity_ids = [raw_entity_ids]
+        if raw_entity_ids == ENTITY_MATCH_ALL:
+            return sorted(self.hass.states.async_entity_ids("light"))
+        if raw_entity_ids == ENTITY_MATCH_NONE:
+            return []
+
+        extracted = await service_helper.async_extract_entity_ids(call)
 
         lights = {
             entity_id for entity_id in extracted if entity_id.startswith("light.")

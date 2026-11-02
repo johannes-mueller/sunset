@@ -355,6 +355,92 @@ class TestTrackingLifecycle:
         ) == {ATTR_COLOR_TEMP_KELVIN: 6000}
 
 
+class TestMalformedLights:
+    """Malformed light attributes are handled safely."""
+
+    def test_missing_colour_limits_skip_the_colour_command(self):
+        controller = make_controller()
+        state = HA.State(
+            "light.light_1",
+            "on",
+            {
+                ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP],
+                ATTR_COLOR_TEMP_KELVIN: 2630,
+                ATTR_BRIGHTNESS: 254,
+            },
+        )
+        assert controller.compute_commands("light.light_1", state) == {}
+
+    def test_malformed_colour_limits_skip_the_colour_command(self, caplog):
+        controller = make_controller()
+        state = HA.State(
+            "light.light_1",
+            "on",
+            {
+                ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP],
+                ATTR_MIN_COLOR_TEMP_KELVIN: "cold",
+                ATTR_MAX_COLOR_TEMP_KELVIN: 6500,
+                ATTR_COLOR_TEMP_KELVIN: 2630,
+                ATTR_BRIGHTNESS: 254,
+            },
+        )
+        with caplog.at_level("DEBUG", logger="sunset"):
+            assert controller.compute_commands("light.light_1", state) == {}
+
+        assert "malformed colour temperature limits" in caplog.text
+
+    def test_zero_kelvin_does_not_divide_by_zero(self):
+        controller = make_controller(day_color_temp=6000)
+        state = HA.State(
+            "light.light_1",
+            "on",
+            {
+                ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP],
+                ATTR_MIN_COLOR_TEMP_KELVIN: 2000,
+                ATTR_MAX_COLOR_TEMP_KELVIN: 6500,
+                ATTR_COLOR_TEMP_KELVIN: 0,
+                ATTR_BRIGHTNESS: 254,
+            },
+        )
+        assert controller.compute_commands("light.light_1", state) == {
+            ATTR_COLOR_TEMP_KELVIN: 6000
+        }
+
+    def test_missing_supported_modes_gives_no_commands(self):
+        controller = make_controller()
+        state = HA.State(
+            "light.light_1",
+            "on",
+            {
+                ATTR_COLOR_TEMP_KELVIN: 2630,
+                ATTR_BRIGHTNESS: 200,
+            },
+        )
+        assert controller.compute_commands("light.light_1", state) == {}
+
+    def test_missing_brightness_on_a_tracked_light_is_skipped(self):
+        controller = make_controller()
+        tracked_state = light_state(brightness=254, color_temp_kelvin=6000)
+        controller.record_command(
+            "light.light_1",
+            {ATTR_BRIGHTNESS: 127},
+            tracked_state,
+        )
+
+        without_brightness = light_state(
+            brightness=None,
+            color_temp_kelvin=6000,
+        )
+        assert controller.compute_commands("light.light_1", without_brightness) == {}
+
+    def test_missing_brightness_on_a_new_light_commands_the_target(self):
+        controller = make_controller()
+        state = light_state(brightness=None, color_temp_kelvin=6000)
+        assert controller.compute_commands("light.light_1", state) == {
+            ATTR_BRIGHTNESS: MAX_DAY_BRIGHTNESS
+        }
+
+
 class TestIgnoredLight:
     """dont_touch and excluded entities are never commanded."""
 

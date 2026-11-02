@@ -5,6 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -42,9 +43,14 @@ class SunsetEntity(Entity, ABC):
     def _sync_state_attributes(self) -> None:
         """Copy the controller state into this entity's state attributes."""
 
+    def _desired_state(self) -> str:
+        """Return the state this entity should currently have."""
+        state = self.state
+        return STATE_UNKNOWN if state is None else str(state)
+
     def async_write_state_if_changed(self) -> None:
-        """Write this entity's state only when the rendered value changed."""
+        """Write this entity's state only when the desired value changed."""
         self._sync_state_attributes()
         current = self.hass.states.get(self.entity_id) if self.hass else None
-        if current is None or current.state != self._stringify_state(available=True):
+        if current is None or current.state != self._desired_state():
             self.async_write_ha_state()

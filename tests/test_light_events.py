@@ -185,3 +185,31 @@ async def test_failing_light_does_not_abort_other_lights(
     await hass.async_block_till_done()
 
     assert handled == ["light.light_2"]
+
+
+async def test_unexpected_compute_error_is_logged_and_isolated(
+    hass,
+    lights,
+    turn_on_service,
+    caplog,
+    monkeypatch,
+    start_at_noon,
+):
+    assert await async_setup(hass, {DOMAIN: {}})
+    coordinator = hass.config_entries.async_entries(DOMAIN)[0].runtime_data.coordinator
+
+    real_compute = coordinator.controller.compute_commands
+
+    def failing_compute(entity_id: str, state: HA.State) -> dict[str, int]:
+        if entity_id == "light.light_1":
+            message = "boom"
+            raise RuntimeError(message)
+        return real_compute(entity_id, state)
+
+    monkeypatch.setattr(coordinator.controller, "compute_commands", failing_compute)
+
+    await turn_on_lights(hass, ["light_1", "light_2"])
+    await hass.async_block_till_done()
+
+    assert [call.data[ATTR_ENTITY_ID] for call in turn_on_service] == ["light.light_2"]
+    assert "Could not compute the update for light light.light_1" in caplog.text

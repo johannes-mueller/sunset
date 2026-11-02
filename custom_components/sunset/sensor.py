@@ -4,11 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntity,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.const import UnitOfTemperature
 
 from .entity import SunsetEntity
@@ -40,7 +36,6 @@ class SunsetColorTempSensor(SunsetEntity, SensorEntity):
     """Sensor for the current target colour temperature."""
 
     _attr_translation_key = "color_temp_kelvin"
-    _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = UnitOfTemperature.KELVIN
     _attr_state_class = SensorStateClass.MEASUREMENT
 

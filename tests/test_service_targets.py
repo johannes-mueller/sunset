@@ -1,7 +1,7 @@
 """Tests for service target normalization."""
 
 from homeassistant.components.light import ATTR_COLOR_TEMP_KELVIN
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_AREA_ID, ATTR_ENTITY_ID
 
 from custom_components.sunset.const import DOMAIN
 
@@ -37,6 +37,32 @@ async def test_dont_touch_accepts_a_single_entity_id_string(
     await hass.async_block_till_done()
 
     assert [call.data[ATTR_ENTITY_ID] for call in turn_on_service] == ["light.light_2"]
+
+
+async def test_dont_touch_accepts_a_list_of_area_ids(
+    hass,
+    lights,
+    more_lights,
+    turn_on_service,
+    start_at_noon,
+):
+    assert await async_setup(hass, {DOMAIN: {}})
+    await turn_on_lights(hass, ["light_1", "light_2", "light_3", "light_4"])
+    await hass.async_block_till_done()
+    turn_on_service.clear()
+
+    await hass.services.async_call(
+        "sunset",
+        "dont_touch",
+        {ATTR_AREA_ID: ["area_1", "area_2"]},
+    )
+    await hass.async_block_till_done()
+
+    start_at_noon.move_to(some_evening_time())
+    async_fire_time_changed_now_time(hass)
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 0
 
 
 async def test_dont_touch_accepts_a_list_of_entity_ids(
@@ -79,3 +105,53 @@ async def test_dont_touch_accepts_a_list_of_entity_ids(
         "light.light_2",
     }
     assert all(call.data[ATTR_COLOR_TEMP_KELVIN] == 2500 for call in turn_on_service)
+
+
+async def test_dont_touch_accepts_entity_match_all(
+    hass,
+    lights,
+    turn_on_service,
+    start_at_noon,
+):
+    assert await async_setup(hass, {DOMAIN: {}})
+    await turn_on_lights(hass, ["light_1", "light_2"])
+    await hass.async_block_till_done()
+    turn_on_service.clear()
+
+    await hass.services.async_call(
+        "sunset",
+        "dont_touch",
+        {ATTR_ENTITY_ID: "all"},
+    )
+    await hass.async_block_till_done()
+
+    start_at_noon.move_to(some_evening_time())
+    async_fire_time_changed_now_time(hass)
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 0
+
+
+async def test_dont_touch_accepts_entity_match_none(
+    hass,
+    lights,
+    turn_on_service,
+    start_at_noon,
+):
+    assert await async_setup(hass, {DOMAIN: {}})
+    await turn_on_lights(hass, ["light_1", "light_2"])
+    await hass.async_block_till_done()
+    turn_on_service.clear()
+
+    await hass.services.async_call(
+        "sunset",
+        "dont_touch",
+        {ATTR_ENTITY_ID: "none"},
+    )
+    await hass.async_block_till_done()
+
+    start_at_noon.move_to(some_evening_time())
+    async_fire_time_changed_now_time(hass)
+    await hass.async_block_till_done()
+
+    assert len(turn_on_service) == 2

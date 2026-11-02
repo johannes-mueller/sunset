@@ -37,6 +37,7 @@ async def test_entities_are_created(hass, start_at_noon):
     assert hass.states.get(REDSHIFT_SWITCH).state == STATE_ON
     assert hass.states.get(BRIGHTNESS_SWITCH).state == STATE_ON
     assert float(hass.states.get(COLOR_SENSOR).state) == 6250
+    assert "device_class" not in hass.states.get(COLOR_SENSOR).attributes
     assert float(hass.states.get(BRIGHTNESS_SENSOR).state) == 254
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
