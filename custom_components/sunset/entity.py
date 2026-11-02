@@ -42,9 +42,13 @@ class SunsetEntity(Entity, ABC):
     def _sync_state_attributes(self) -> None:
         """Copy the controller state into this entity's state attributes."""
 
+    @abstractmethod
+    def _desired_state(self) -> str:
+        """Return the state this entity should currently have."""
+
     def async_write_state_if_changed(self) -> None:
-        """Write this entity's state only when the rendered value changed."""
+        """Write this entity's state only when the desired value changed."""
         self._sync_state_attributes()
         current = self.hass.states.get(self.entity_id) if self.hass else None
-        if current is None or current.state != self._stringify_state(available=True):
+        if current is None or current.state != self._desired_state():
             self.async_write_ha_state()
