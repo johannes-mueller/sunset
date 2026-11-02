@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import STATE_OFF, STATE_ON
 
 from .entity import SunsetEntity
 
@@ -44,9 +43,6 @@ class SunsetRedshiftActiveSwitch(SunsetEntity, SwitchEntity):
     def _sync_state_attributes(self) -> None:
         self._attr_is_on = self.coordinator.controller.redshift_active
 
-    def _desired_state(self) -> str:
-        return STATE_ON if self.coordinator.controller.redshift_active else STATE_OFF
-
     async def async_turn_on(self, **_kwargs: object) -> None:
         """Reactivate automatic redshifting."""
         await self.coordinator.async_activate_redshift()
@@ -67,9 +63,6 @@ class SunsetBrightnessActiveSwitch(SunsetEntity, SwitchEntity):
 
     def _sync_state_attributes(self) -> None:
         self._attr_is_on = self.coordinator.controller.brightness_active
-
-    def _desired_state(self) -> str:
-        return STATE_ON if self.coordinator.controller.brightness_active else STATE_OFF
 
     async def async_turn_on(self, **_kwargs: object) -> None:
         """Reactivate automatic brightness control."""

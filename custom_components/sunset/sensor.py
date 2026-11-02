@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
-from homeassistant.const import STATE_UNKNOWN, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 
 from .entity import SunsetEntity
 
@@ -46,10 +46,6 @@ class SunsetColorTempSensor(SunsetEntity, SensorEntity):
     def _sync_state_attributes(self) -> None:
         self._attr_native_value = self.coordinator.controller.target_color_temp()
 
-    def _desired_state(self) -> str:
-        value = self._attr_native_value
-        return STATE_UNKNOWN if value is None else str(value)
-
 
 class SunsetBrightnessSensor(SunsetEntity, SensorEntity):
     """Sensor for the current target brightness."""
@@ -63,7 +59,3 @@ class SunsetBrightnessSensor(SunsetEntity, SensorEntity):
 
     def _sync_state_attributes(self) -> None:
         self._attr_native_value = self.coordinator.controller.target_brightness()
-
-    def _desired_state(self) -> str:
-        value = self._attr_native_value
-        return STATE_UNKNOWN if value is None else str(value)
